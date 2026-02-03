@@ -5,40 +5,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DreamFi: Car Engine Mechanics</title>
     <style>
-        body { background: #121212; color: #eee; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow: hidden; }
-        .header { position: absolute; top: 20px; text-align: center; }
-        .header h1 { color: #ffcc00; margin: 0; font-size: 1.8rem; }
-        .header p { color: #888; font-size: 0.9rem; }
+        body { 
+            background: #121212; 
+            color: #eee; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            margin: 0; 
+        }
         
-        #canvas-container { position: relative; background: #1e1e1e; border: 2px solid #333; border-radius: 20px; box-shadow: 0 0 30px rgba(0,0,0,0.5); padding: 20px; }
-        #status-label { position: absolute; top: 40px; width: 100%; text-align: center; font-size: 1.5rem; font-weight: 800; letter-spacing: 2px; }
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px;
+        }
+        .header h1 { 
+            color: #ffcc00; 
+            margin: 0; 
+            font-size: 1.8rem; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .header p { color: #888; font-size: 0.9rem; margin-top: 5px; }
         
-        #controls { margin-top: 30px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; width: 300px; text-align: center; }
-        input[type=range] { width: 100%; cursor: pointer; accent-color: #ffcc00; }
-        .back-btn { margin-top: 20px; color: #555; text-decoration: none; font-size: 0.8rem; border-bottom: 1px solid #333; transition: 0.3s; }
-        .back-btn:hover { color: #ffcc00; border-color: #ffcc00; }
+        #canvas-container { 
+            position: relative; 
+            background: #1e1e1e; 
+            border: 2px solid #333; 
+            border-radius: 25px; 
+            box-shadow: 0 15px 50px rgba(0,0,0,0.7); 
+            padding: 10px;
+        }
+
+        /* [수정 포인트] 글자가 피스톤과 겹치지 않도록 상단 바 영역 분리 */
+        #status-bar {
+            width: 100%;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px 15px 0 0;
+            margin-bottom: 10px;
+        }
+
+        #status-label { 
+            font-size: 1.6rem; 
+            font-weight: 900; 
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+        }
+        
+        #controls { 
+            margin-top: 30px; 
+            background: #1e1e1e; 
+            padding: 25px; 
+            border-radius: 20px; 
+            width: 320px; 
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        input[type=range] { 
+            width: 100%; 
+            margin: 15px 0;
+            cursor: pointer; 
+            accent-color: #ffcc00; 
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: #aaa;
+            margin-top: 10px;
+        }
+
+        .back-btn { 
+            display: inline-block;
+            margin-top: 25px; 
+            color: #666; 
+            text-decoration: none; 
+            font-size: 0.85rem; 
+            transition: 0.3s;
+        }
+        .back-btn:hover { color: #ffcc00; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h1>Vibe Engineering #01</h1>
-        <p>무의식의 연금술: 자동차 4행정 엔진 원리</p>
+        <p>"무의식의 연금술: 데이터가 기계가 되는 순간"</p>
     </div>
 
     <div id="canvas-container">
-        <div id="status-label">READY</div>
-        <canvas id="engineCanvas" width="300" height="400"></canvas>
+        <div id="status-bar">
+            <div id="status-label">ENGINE START</div>
+        </div>
+        <canvas id="engineCanvas" width="300" height="350"></canvas>
     </div>
 
     <div id="controls">
-        <div style="margin-bottom: 10px; font-weight: bold;">RPM (Engine Speed)</div>
+        <div style="font-weight: bold; color: #ffcc00;">RPM CONTROL</div>
         <input type="range" id="speedRange" min="0.01" max="0.2" step="0.01" value="0.05">
-        <div style="margin-top: 15px; font-size: 0.85rem; line-height: 1.6; color: #ccc;">
-            흡입(Blue) → 압축(Green) → <b>폭발(Orange)</b> → 배기(Gray)
+        
+        <div class="legend">
+            <span>🔵 Intake (흡입)</span>
+            <span>🟢 Compression (압축)</span>
+            <span>🔥 Power (폭발)</span>
+            <span>⚪ Exhaust (배기)</span>
         </div>
-        <br>
-        <a href="../index.html" class="back-btn">← 목록으로 돌아가기</a>
+        
+        <a href="../index.html" class="back-btn">← 시리즈 목록 보기</a>
     </div>
 
     <script>
@@ -49,84 +131,80 @@
 
         let angle = 0;
         const centerX = 150;
-        const centerY = 250;
+        const centerY = 220; // 위치 최적화
         const crankRadius = 45;
-        const rodLength = 160;
+        const rodLength = 150;
         const cylinderWidth = 110;
-        const cylinderTop = 60;
+        const cylinderTop = 10;
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             angle += parseFloat(speedRange.value);
-            const cycleAngle = angle % (Math.PI * 4); // 720도 사이클
+            const cycleAngle = angle % (Math.PI * 4);
 
             let state = "";
             let fuelColor = "transparent";
-            let glow = 0;
+            let textColor = "#fff";
 
+            // 4행정 로직 및 가독성 개선
             if (cycleAngle < Math.PI) {
-                state = "INTAKE (흡입)";
+                state = "INTAKE";
                 fuelColor = "rgba(0, 150, 255, 0.4)";
-                statusLabel.style.color = "#0096ff";
+                textColor = "#0096ff";
             } else if (cycleAngle < Math.PI * 2) {
-                state = "COMPRESSION (압축)";
-                fuelColor = "rgba(0, 255, 100, 0.5)";
-                statusLabel.style.color = "#00ff64";
+                state = "COMPRESSION";
+                fuelColor = "rgba(0, 255, 100, 0.4)";
+                textColor = "#00ff64";
             } else if (cycleAngle < Math.PI * 3) {
-                state = "POWER (폭발!)";
+                state = "POWER !!";
                 fuelColor = "rgba(255, 100, 0, 0.9)";
-                statusLabel.style.color = "#ff6400";
-                glow = 20;
+                textColor = "#ff6400";
             } else {
-                state = "EXHAUST (배기)";
-                fuelColor = "rgba(150, 150, 150, 0.6)";
-                statusLabel.style.color = "#aaaaaa";
+                state = "EXHAUST";
+                fuelColor = "rgba(150, 150, 150, 0.5)";
+                textColor = "#aaaaaa";
             }
 
             statusLabel.innerText = state;
+            statusLabel.style.color = textColor;
 
             const crankX = centerX + Math.cos(angle) * crankRadius;
             const crankY = centerY + Math.sin(angle) * crankRadius;
             const pistonY = centerY - Math.sqrt(rodLength**2 - (crankX - centerX)**2) + Math.sin(angle) * crankRadius;
 
-            // 1. 실린더 가이드라인
-            ctx.strokeStyle = "#444";
-            ctx.lineWidth = 6;
-            ctx.strokeRect(centerX - cylinderWidth/2, cylinderTop, cylinderWidth, 210);
-
-            // 2. 내부 연료/폭발 효과
-            ctx.shadowBlur = glow;
-            ctx.shadowColor = fuelColor;
+            // 1. 연료/폭발 효과 (실린더 상단)
             ctx.fillStyle = fuelColor;
-            ctx.fillRect(centerX - cylinderWidth/2 + 3, cylinderTop + 3, cylinderWidth - 6, pistonY - cylinderTop);
-            ctx.shadowBlur = 0;
+            ctx.fillRect(centerX - cylinderWidth/2 + 5, cylinderTop, cylinderWidth - 10, pistonY - cylinderTop);
+
+            // 2. 실린더 벽면
+            ctx.strokeStyle = "#444";
+            ctx.lineWidth = 4;
+            ctx.strokeRect(centerX - cylinderWidth/2, cylinderTop, cylinderWidth, 200);
 
             // 3. 커넥팅 로드
             ctx.beginPath();
             ctx.moveTo(centerX, pistonY);
             ctx.lineTo(crankX, crankY);
-            ctx.strokeStyle = "#888";
+            ctx.strokeStyle = "#777";
             ctx.lineWidth = 8;
             ctx.lineCap = "round";
             ctx.stroke();
 
-            // 4. 피스톤 본체
-            ctx.fillStyle = "#fff";
-            ctx.fillRect(centerX - cylinderWidth/2 + 5, pistonY - 25, cylinderWidth - 10, 40);
-            ctx.fillStyle = "#333";
-            ctx.fillRect(centerX - cylinderWidth/2 + 5, pistonY - 5, cylinderWidth - 10, 5); // 피스톤 링 묘사
+            // 4. 피스톤
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(centerX - cylinderWidth/2 + 5, pistonY - 20, cylinderWidth - 10, 35);
+            ctx.fillStyle = "#333"; // 피스톤 하단 디테일
+            ctx.fillRect(centerX - cylinderWidth/2 + 5, pistonY + 10, cylinderWidth - 10, 5);
 
-            // 5. 크랭크축 회전부
+            // 5. 크랭크축 회전
             ctx.beginPath();
             ctx.arc(centerX, centerY, crankRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = "#333";
-            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = "#222";
             ctx.stroke();
-            ctx.setLineDash([]);
 
             ctx.beginPath();
-            ctx.arc(crankX, crankY, 15, 0, Math.PI * 2);
+            ctx.arc(crankX, crankY, 12, 0, Math.PI * 2);
             ctx.fillStyle = "#ffcc00";
             ctx.fill();
 
