@@ -2,21 +2,81 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DreamFi: Vibe Engineering Series</title>
     <style>
-        body { background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; padding-top: 100px; }
-        h1 { color: #ffcc00; }
-        .link-box { margin-top: 30px; }
-        a { color: #fff; text-decoration: none; border: 1px solid #ffcc00; padding: 15px 30px; border-radius: 8px; transition: 0.3s; }
-        a:hover { background: #ffcc00; color: black; }
+        body { 
+            background: #121212; 
+            color: white; 
+            font-family: 'Malgun Gothic', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            margin: 0; 
+        }
+        h1 { color: #ffcc00; margin-bottom: 10px; font-size: 2rem; }
+        p { color: #888; margin-bottom: 40px; text-align: center; line-height: 1.6; }
+        
+        .container { width: 90%; max-width: 400px; }
+        
+        .link-box { 
+            margin-bottom: 20px; 
+            transition: 0.3s;
+        }
+        
+        a { 
+            display: block;
+            background: #1e1e1e;
+            color: #fff; 
+            text-decoration: none; 
+            border: 2px solid #333; 
+            padding: 20px; 
+            border-radius: 15px; 
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: 0.3s;
+        }
+        
+        a:hover { 
+            border-color: #ffcc00; 
+            background: rgba(255, 204, 0, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .badge {
+            display: inline-block;
+            background: #ffcc00;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
-    <h1>🛠️ Vibe Engineering Series</h1>
-    <p>무의식의 연금술: 바이브 코딩으로 구현하는 기계 원리</p>
+
+    <h1>🛠️ Vibe Engineering</h1>
+    <p>"무의식의 연금술: 제품만 있으면 나도 전문가!"<br>초보자도 10초 만에 이해하는 자동차 원리 시리즈</p>
     
-    <div class="link-box">
-        <a href="./01-car-engine/index.html">01. 자동차 4행정 엔진 원리 보기 →</a>
+    <div class="container">
+        <div class="link-box">
+            <span class="badge">STEP 01</span>
+            <a href="./01-car-engine/index.html">🚗 자동차 4행정 엔진 원리<br><span style="font-size: 0.8rem; font-weight: normal; color: #aaa;">(에너지가 태어나는 순간)</span></a>
+        </div>
+
+        <div class="link-box">
+            <span class="badge">STEP 02</span>
+            <a href="./02-transmission/index.html">⚙️ 변속기(기어)의 원리<br><span style="font-size: 0.8rem; font-weight: normal; color: #aaa;">(힘과 속도를 조절해요)</span></a>
+        </div>
+
+        <div style="text-align: center; color: #444; margin-top: 30px; font-size: 0.9rem;">
+            다음 시리즈: 03. 조향 장치(방향 바꾸기) 예정
+        </div>
     </div>
+
 </body>
 </html>
