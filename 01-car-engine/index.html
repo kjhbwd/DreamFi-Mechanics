@@ -1,20 +1,139 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <title>DreamFi: Vibe Engineering Series</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DreamFi: Car Engine Mechanics</title>
     <style>
-        body { background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; padding-top: 50px; }
-        a { color: #ffcc00; text-decoration: none; font-size: 1.5rem; border: 1px solid #ffcc00; padding: 10px 20px; border-radius: 5px; }
-        a:hover { background: #ffcc00; color: black; }
-        .motto { color: #888; font-style: italic; margin-bottom: 50px; }
+        body { background: #121212; color: #eee; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        .header { position: absolute; top: 20px; text-align: center; }
+        .header h1 { color: #ffcc00; margin: 0; font-size: 1.8rem; }
+        .header p { color: #888; font-size: 0.9rem; }
+        
+        #canvas-container { position: relative; background: #1e1e1e; border: 2px solid #333; border-radius: 20px; box-shadow: 0 0 30px rgba(0,0,0,0.5); padding: 20px; }
+        #status-label { position: absolute; top: 40px; width: 100%; text-align: center; font-size: 1.5rem; font-weight: 800; letter-spacing: 2px; }
+        
+        #controls { margin-top: 30px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; width: 300px; text-align: center; }
+        input[type=range] { width: 100%; cursor: pointer; accent-color: #ffcc00; }
+        .back-btn { margin-top: 20px; color: #555; text-decoration: none; font-size: 0.8rem; border-bottom: 1px solid #333; transition: 0.3s; }
+        .back-btn:hover { color: #ffcc00; border-color: #ffcc00; }
     </style>
 </head>
 <body>
-    <h1>DreamFi: Vibe Engineering</h1>
-    <p class="motto">"무의식의 연금술: 바이브 코딩으로 기계를 해부하다"</p>
-    
-    <div style="margin-top: 50px;">
-        <a href="./01-car-engine/index.html">01. 자동차 4행정 엔진 원리 →</a>
+
+    <div class="header">
+        <h1>Vibe Engineering #01</h1>
+        <p>무의식의 연금술: 자동차 4행정 엔진 원리</p>
     </div>
-    </body>
+
+    <div id="canvas-container">
+        <div id="status-label">READY</div>
+        <canvas id="engineCanvas" width="300" height="400"></canvas>
+    </div>
+
+    <div id="controls">
+        <div style="margin-bottom: 10px; font-weight: bold;">RPM (Engine Speed)</div>
+        <input type="range" id="speedRange" min="0.01" max="0.2" step="0.01" value="0.05">
+        <div style="margin-top: 15px; font-size: 0.85rem; line-height: 1.6; color: #ccc;">
+            흡입(Blue) → 압축(Green) → <b>폭발(Orange)</b> → 배기(Gray)
+        </div>
+        <br>
+        <a href="../index.html" class="back-btn">← 목록으로 돌아가기</a>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('engineCanvas');
+        const ctx = canvas.getContext('2d');
+        const statusLabel = document.getElementById('status-label');
+        const speedRange = document.getElementById('speedRange');
+
+        let angle = 0;
+        const centerX = 150;
+        const centerY = 250;
+        const crankRadius = 45;
+        const rodLength = 160;
+        const cylinderWidth = 110;
+        const cylinderTop = 60;
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            angle += parseFloat(speedRange.value);
+            const cycleAngle = angle % (Math.PI * 4); // 720도 사이클
+
+            let state = "";
+            let fuelColor = "transparent";
+            let glow = 0;
+
+            if (cycleAngle < Math.PI) {
+                state = "INTAKE (흡입)";
+                fuelColor = "rgba(0, 150, 255, 0.4)";
+                statusLabel.style.color = "#0096ff";
+            } else if (cycleAngle < Math.PI * 2) {
+                state = "COMPRESSION (압축)";
+                fuelColor = "rgba(0, 255, 100, 0.5)";
+                statusLabel.style.color = "#00ff64";
+            } else if (cycleAngle < Math.PI * 3) {
+                state = "POWER (폭발!)";
+                fuelColor = "rgba(255, 100, 0, 0.9)";
+                statusLabel.style.color = "#ff6400";
+                glow = 20;
+            } else {
+                state = "EXHAUST (배기)";
+                fuelColor = "rgba(150, 150, 150, 0.6)";
+                statusLabel.style.color = "#aaaaaa";
+            }
+
+            statusLabel.innerText = state;
+
+            const crankX = centerX + Math.cos(angle) * crankRadius;
+            const crankY = centerY + Math.sin(angle) * crankRadius;
+            const pistonY = centerY - Math.sqrt(rodLength**2 - (crankX - centerX)**2) + Math.sin(angle) * crankRadius;
+
+            // 1. 실린더 가이드라인
+            ctx.strokeStyle = "#444";
+            ctx.lineWidth = 6;
+            ctx.strokeRect(centerX - cylinderWidth/2, cylinderTop, cylinderWidth, 210);
+
+            // 2. 내부 연료/폭발 효과
+            ctx.shadowBlur = glow;
+            ctx.shadowColor = fuelColor;
+            ctx.fillStyle = fuelColor;
+            ctx.fillRect(centerX - cylinderWidth/2 + 3, cylinderTop + 3, cylinderWidth - 6, pistonY - cylinderTop);
+            ctx.shadowBlur = 0;
+
+            // 3. 커넥팅 로드
+            ctx.beginPath();
+            ctx.moveTo(centerX, pistonY);
+            ctx.lineTo(crankX, crankY);
+            ctx.strokeStyle = "#888";
+            ctx.lineWidth = 8;
+            ctx.lineCap = "round";
+            ctx.stroke();
+
+            // 4. 피스톤 본체
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(centerX - cylinderWidth/2 + 5, pistonY - 25, cylinderWidth - 10, 40);
+            ctx.fillStyle = "#333";
+            ctx.fillRect(centerX - cylinderWidth/2 + 5, pistonY - 5, cylinderWidth - 10, 5); // 피스톤 링 묘사
+
+            // 5. 크랭크축 회전부
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, crankRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = "#333";
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.beginPath();
+            ctx.arc(crankX, crankY, 15, 0, Math.PI * 2);
+            ctx.fillStyle = "#ffcc00";
+            ctx.fill();
+
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
 </html>
