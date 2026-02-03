@@ -3,56 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DreamFi: 쉬운 자동차 엔진 원리</title>
+    <title>DreamFi: 에너지의 변신</title>
     <style>
         body { background: #121212; color: #eee; font-family: 'Malgun Gothic', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .header h1 { color: #ffcc00; margin-bottom: 5px; text-align: center; }
+        .header h1 { color: #ffcc00; margin-bottom: 5px; }
         
         #canvas-container { position: relative; background: #1e1e1e; border: 4px solid #333; border-radius: 25px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        /* [핵심 추가] 초보자용 설명창 스타일 */
-        #easy-guide {
-            width: 300px;
-            min-height: 80px;
-            background: rgba(255, 204, 0, 0.1);
-            border: 2px solid #ffcc00;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            padding: 15px;
-            text-align: center;
-            font-size: 1.1rem;
-            line-height: 1.5;
-            color: #ffcc00;
+        /* 실시간 가이드창 */
+        #easy-guide { width: 320px; min-height: 70px; background: rgba(255, 204, 0, 0.1); border: 2px solid #ffcc00; border-radius: 15px; margin-bottom: 15px; padding: 15px; text-align: center; font-size: 1.1rem; color: #ffcc00; font-weight: bold; }
+
+        /* [추가] 에너지 원리 버튼 */
+        #info-btn {
+            margin-bottom: 10px;
+            background: #ffcc00;
+            color: #000;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
             font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        #info-btn:hover { background: #fff; }
+
+        /* [추가] 설명 팝업창 */
+        #info-modal {
+            display: none;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            background: #222;
+            border: 3px solid #ffcc00;
+            padding: 20px;
+            border-radius: 20px;
+            z-index: 100;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
         }
 
         #status-label { font-size: 1.8rem; font-weight: 900; margin-bottom: 10px; }
         #controls { margin-top: 20px; text-align: center; width: 300px; }
         input[type=range] { width: 100%; accent-color: #ffcc00; }
-        .back-link { margin-top: 20px; display: block; color: #666; text-decoration: none; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h1>Vibe Engineering #01</h1>
-        <p style="color:#888; text-align:center;">부품만 있으면 나도 자동차 박사! 🛠️</p>
     </div>
 
-    <div id="easy-guide">엔진을 돌려볼까요?</div>
+    <button id="info-btn" onclick="toggleModal()">💡 에너지 변신 원리 보기</button>
+
+    <div id="easy-guide">엔진이 움직이기 시작해요!</div>
 
     <div id="canvas-container">
+        <div id="info-modal">
+            <h3 style="color:#ffcc00; margin-top:0;">에너지의 변신! 🪄</h3>
+            <p style="font-size: 0.9rem; line-height: 1.6;">
+                1. <b>열에너지:</b> 연료가 '펑!' 터지며 뜨거운 열이 생겨요.<br><br>
+                2. <b>운동에너지:</b> 뜨거운 열이 피스톤을 밀어내서 '뱅글뱅글' 도는 힘으로 바뀌어요!<br><br>
+                이 힘이 나중에 <b>바퀴</b>를 돌린답니다!
+            </p>
+            <button onclick="toggleModal()" style="background:#444; color:#fff; border:none; padding:5px 15px; border-radius:10px; cursor:pointer;">닫기</button>
+        </div>
+
         <div id="status-label">READY</div>
-        <canvas id="engineCanvas" width="300" height="300"></canvas>
+        <canvas id="engineCanvas" width="300" height="280"></canvas>
     </div>
 
     <div id="controls">
-        <div style="font-weight: bold;">엔진 속도 조절 (RPM)</div>
+        <div style="font-weight: bold;">엔진 속도 (RPM)</div>
         <input type="range" id="speedRange" min="0.01" max="0.2" step="0.01" value="0.05">
-        <a href="../index.html" class="back-link">← 시리즈 목록으로</a>
     </div>
 
     <script>
+        // 팝업 띄우기 함수
+        function toggleModal() {
+            const modal = document.getElementById('info-modal');
+            modal.style.display = (modal.style.display === 'block') ? 'none' : 'block';
+        }
+
         const canvas = document.getElementById('engineCanvas');
         const ctx = canvas.getContext('2d');
         const statusLabel = document.getElementById('status-label');
@@ -61,9 +93,9 @@
 
         let angle = 0;
         const centerX = 150;
-        const centerY = 180;
+        const centerY = 160;
         const crankRadius = 40;
-        const rodLength = 130;
+        const rodLength = 120;
         const cylinderWidth = 100;
 
         function draw() {
@@ -71,44 +103,31 @@
             angle += parseFloat(speedRange.value);
             const cycleAngle = angle % (Math.PI * 4);
 
-            let state = "";
-            let guideText = "";
-            let color = "#fff";
+            let state = ""; let guideText = ""; let color = "#fff";
 
-            // [수정] 초등학생용 쉬운 설명 로직
             if (cycleAngle < Math.PI) {
-                state = "1. 흡입 😋";
-                guideText = "엔진이 공기와 연료를<br>'꿀꺽' 들이마셔요!";
-                color = "#0096ff";
+                state = "1. 흡입 😋"; guideText = "연료를 '꿀꺽' 마셔요!"; color = "#0096ff";
             } else if (cycleAngle < Math.PI * 2) {
-                state = "2. 압축 꾹!";
-                guideText = "힘을 내기 위해 공기를<br>'아주 작게' 꽉 눌러요!";
-                color = "#00ff64";
+                state = "2. 압축 꾹!"; guideText = "공기를 '꽉' 눌러요!"; color = "#00ff64";
             } else if (cycleAngle < Math.PI * 3) {
-                state = "3. 폭발 !! 💥";
-                guideText = "불꽃이 팍! 터지면서<br>피스톤을 '번쩍' 밀어내요!";
-                color = "#ff6400";
+                state = "3. 폭발 !! 💥"; guideText = "에너지가 생기는 순간!"; color = "#ff6400";
             } else {
-                state = "4. 배기 후~";
-                guideText = "남은 연기는 밖으로<br>'시원하게' 내보내요!";
-                color = "#aaaaaa";
+                state = "4. 배기 후~"; guideText = "연기를 밖으로 내보내요!"; color = "#aaaaaa";
             }
 
             statusLabel.innerText = state;
             statusLabel.style.color = color;
-            easyGuide.innerHTML = guideText; // 쉬운 설명 업데이트
+            easyGuide.innerHTML = guideText;
 
             const crankX = centerX + Math.cos(angle) * crankRadius;
             const crankY = centerY + Math.sin(angle) * crankRadius;
             const pistonY = centerY - Math.sqrt(rodLength**2 - (crankX - centerX)**2) + Math.sin(angle) * crankRadius;
 
-            // 실린더 & 피스톤 그리기 (단순화)
             ctx.strokeStyle = "#444"; ctx.lineWidth = 5;
-            ctx.strokeRect(centerX - cylinderWidth/2, 20, cylinderWidth, 180);
+            ctx.strokeRect(centerX - cylinderWidth/2, 10, cylinderWidth, 160);
             
-            ctx.fillStyle = color;
-            ctx.globalAlpha = 0.3;
-            ctx.fillRect(centerX - cylinderWidth/2, 20, cylinderWidth, pistonY - 20);
+            ctx.fillStyle = color; ctx.globalAlpha = 0.3;
+            ctx.fillRect(centerX - cylinderWidth/2, 10, cylinderWidth, pistonY - 10);
             ctx.globalAlpha = 1.0;
 
             ctx.beginPath();
