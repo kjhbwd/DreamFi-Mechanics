@@ -3,21 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DreamFi #02: 변속기 원리</title>
+    <title>DreamFi #02: 변속기와 에너지의 마법</title>
     <style>
         body { background: #121212; color: #eee; font-family: 'Malgun Gothic', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
         .header h1 { color: #ffcc00; margin-bottom: 5px; }
-        #easy-guide { width: 320px; min-height: 80px; background: rgba(255, 204, 0, 0.1); border: 2px solid #ffcc00; border-radius: 15px; margin-bottom: 20px; padding: 15px; text-align: center; font-size: 1.1rem; color: #ffcc00; font-weight: bold; }
+        
+        /* 실시간 가이드창 */
+        #easy-guide { width: 340px; min-height: 80px; background: rgba(255, 204, 0, 0.1); border: 2px solid #ffcc00; border-radius: 15px; margin-bottom: 15px; padding: 15px; text-align: center; font-size: 1.1rem; color: #ffcc00; font-weight: bold; line-height: 1.5; }
         
         /* 에너지 원리 버튼 */
-        #info-btn { margin-bottom: 10px; background: #ffcc00; color: #000; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; }
-        
-        #info-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; background: #222; border: 3px solid #ffcc00; padding: 20px; border-radius: 20px; z-index: 100; text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+        #info-btn { margin-bottom: 10px; background: #ffcc00; color: #000; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        #info-btn:hover { background: #fff; }
 
-        #canvas-container { background: #1e1e1e; border: 4px solid #333; border-radius: 25px; padding: 20px; }
+        /* 설명 팝업창 */
+        #info-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; background: #222; border: 3px solid #ffcc00; padding: 20px; border-radius: 20px; z-index: 100; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+
+        #canvas-container { position: relative; background: #1e1e1e; border: 4px solid #333; border-radius: 25px; padding: 20px; }
+        
+        /* 기어 버튼 그룹 */
         .btn-group { margin-top: 20px; display: flex; gap: 10px; }
-        button.gear-btn { background: #333; color: white; border: 2px solid #555; padding: 12px 15px; cursor: pointer; border-radius: 10px; font-weight: bold; }
-        button.active { background: #ffcc00; color: black; border-color: #fff; }
+        .gear-btn { background: #333; color: white; border: 2px solid #555; padding: 12px 18px; cursor: pointer; border-radius: 12px; font-weight: bold; transition: 0.3s; flex: 1; }
+        .active { background: #ffcc00; color: black; border-color: #fff; box-shadow: 0 0 15px rgba(255,204,0,0.4); }
+
+        .back-link { margin-top: 20px; color: #666; text-decoration: none; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -26,27 +34,34 @@
         <h1>Vibe Engineering #02</h1>
     </div>
 
-    <button id="info-btn" onclick="toggleModal()">💡 에너지 활용 원리 보기</button>
+    <button id="info-btn" onclick="toggleModal()">💡 에너지 활용 원리 (필독!)</button>
 
     <div id="easy-guide">자전거 기어를 바꿔볼까요?</div>
 
     <div id="canvas-container">
         <div id="info-modal">
-            <h3 style="color:#ffcc00; margin-top:0;">힘과 속도의 마법! 🪄</h3>
-            <p style="font-size: 0.9rem; line-height: 1.6;">
-                1. <b>1단:</b> 엔진은 빨리 돌아도 바퀴는 천천히 돌아요. 대신 <b>엄청난 힘</b>이 생겨서 언덕도 잘 올라가요!<br><br>
-                2. <b>3단:</b> 엔진이 조금만 돌아도 바퀴가 <b>쌩쌩 빠르게</b> 돌아요! 고속도로에서 사용하죠.
+            <h3 style="color:#ffcc00; margin-top:0; text-align: center;">기어의 비밀! ⚙️</h3>
+            <p style="font-size: 0.85rem; line-height: 1.7; color: #ddd;">
+                🤔 <b>왜 엔진은 바쁜데 바퀴는 느릴까요?</b><br>
+                무거운 자동차를 출발시키려면 <b>'엄청난 힘'</b>이 필요해요. 그래서 1단일 때 엔진은 기름(에너지)을 가장 많이 쓰면서 힘을 모은답니다!<br><br>
+                ✅ <b>1단:</b> 엔진(매우 바쁨) ➡️ 바퀴(느리지만 <b>왕파워!</b>)<br>
+                ✅ <b>3단:</b> 엔진(여유로움) ➡️ 바퀴(쌩쌩 <b>초고속!</b>)<br><br>
+                <span style="color:#ffcc00;">* 1단에서 에너지가 가장 많이 소비돼요!</span>
             </p>
-            <button onclick="toggleModal()" style="background:#444; color:#fff; border:none; padding:5px 15px; border-radius:10px; cursor:pointer;">닫기</button>
+            <div style="text-align: center;">
+                <button onclick="toggleModal()" style="background:#444; color:#fff; border:none; padding:8px 20px; border-radius:10px; cursor:pointer;">이해했어요!</button>
+            </div>
         </div>
-        <canvas id="gearCanvas" width="320" height="200"></canvas>
+        <canvas id="gearCanvas" width="340" height="240"></canvas>
     </div>
 
     <div class="btn-group">
-        <button onclick="setGear(1)" id="gear1" class="gear-btn active">1단 (힘차게!)</button>
-        <button onclick="setGear(2)" id="gear2" class="gear-btn">2단 (중간)</button>
-        <button onclick="setGear(3)" id="gear3" class="gear-btn">3단 (쌩쌩~)</button>
+        <button onclick="setGear(1)" id="gear1" class="gear-btn active">1단 (영차영차)</button>
+        <button onclick="setGear(2)" id="gear2" class="gear-btn">2단 (적당히)</button>
+        <button onclick="setGear(3)" id="gear3" class="gear-btn">3단 (쌩쌩하게)</button>
     </div>
+
+    <a href="../index.html" class="back-link">← 메인 대문으로 가기</a>
 
     <script>
         function toggleModal() {
@@ -63,9 +78,9 @@
         let currentGear = 1;
 
         const gearData = {
-            1: { ratio: 0.5, desc: "1단: 오르막길 영차영차!<br>힘이 제일 세요!", color: "#00ff64" },
-            2: { ratio: 1.0, desc: "2단: 평지에서 평범하게~<br>적당한 속도로 가요!", color: "#0096ff" },
-            3: { ratio: 2.0, desc: "3단: 고속도로 쌩쌩~!<br>바퀴가 엄청 빨라요!", color: "#ff6400" }
+            1: { ratio: 0.4, engineColor: "#ff4400", desc: "1단: 엔진이 땀을 뻘뻘!<br>가장 많은 에너지를 써서 힘을 모아요.", wheelColor: "#00ff64" },
+            2: { ratio: 1.0, engineColor: "#ffcc00", desc: "2단: 차가 움직이기 시작했어요.<br>이제 조금 더 빠르게 가볼까요?", wheelColor: "#0096ff" },
+            3: { ratio: 2.2, engineColor: "#ffffff", desc: "3단: 고속도로 쌩쌩~!<br>적은 에너지로도 아주 빠르게 가요!", wheelColor: "#ff6400" }
         };
 
         function setGear(g) {
@@ -75,36 +90,52 @@
             document.getElementById('gear' + g).classList.add('active');
         }
 
-        function drawGear(x, y, radius, angle, color, teeth) {
+        function drawGear(x, y, radius, angle, color, teeth, label) {
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(angle);
+            
+            // 기어 그림자 효과
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = color;
+
             ctx.fillStyle = color;
             for (let i = 0; i < teeth; i++) {
                 ctx.rotate(Math.PI * 2 / teeth);
-                ctx.fillRect(radius - 5, -5, 12, 10);
+                ctx.fillRect(radius - 5, -8, 15, 16);
             }
             ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
+            
+            // 중앙 구멍
+            ctx.fillStyle = "#1e1e1e";
+            ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill();
             ctx.restore();
+
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = color;
+            ctx.font = "bold 14px sans-serif";
+            ctx.fillText(label, x - 30, y + radius + 30);
         }
 
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            engineAngle += 0.05;
-            wheelAngle += 0.05 * gearData[currentGear].ratio;
+            
+            // 엔진 회전 (1단일 때 시각적으로 더 바쁘게 표현)
+            const speedBase = 0.05;
+            engineAngle += speedBase * (currentGear === 1 ? 1.5 : 1); 
+            wheelAngle += speedBase * (currentGear === 1 ? 1.5 : 1) * gearData[currentGear].ratio;
 
-            // 엔진 쪽 기어
-            drawGear(80, 100, 30, engineAngle, "#888", 10);
-            ctx.fillStyle = "#888"; ctx.fillText("엔진의 힘", 55, 160);
+            // 엔진 기어 (1단일 때 빨간색으로 달아오름)
+            drawGear(100, 100, 35, engineAngle, gearData[currentGear].engineColor, 10, "엔진 (동력)");
 
-            // 바퀴 쪽 기어
-            const wheelSize = 30 * (1.5 / gearData[currentGear].ratio);
-            drawGear(220, 100, wheelSize, -wheelAngle, gearData[currentGear].color, 16);
-            ctx.fillStyle = gearData[currentGear].color; ctx.fillText("바퀴의 속도", 195, 100 + wheelSize + 30);
+            // 바퀴 기어
+            const wheelSize = 35 * (1.5 / gearData[currentGear].ratio);
+            drawGear(240, 100, wheelSize, -wheelAngle, gearData[currentGear].color || gearData[currentGear].wheelColor, 18, "바퀴 (전달)");
 
             requestAnimationFrame(animate);
         }
-        setGear(1); animate();
+        setGear(1);
+        animate();
     </script>
 </body>
 </html>
