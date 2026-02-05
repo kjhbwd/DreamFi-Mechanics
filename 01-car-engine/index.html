@@ -28,8 +28,16 @@
         /* 컨트롤러 UI */
         .controls-box { width: 80%; text-align: center; margin-top: 20px; }
         input[type=range] { width: 100%; accent-color: var(--brand-gold); cursor: pointer; height: 8px; border-radius: 5px; }
-        .info-btn { background: var(--brand-gold); color: #000; border: none; padding: 10px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-bottom: 20px; transition: 0.3s; }
+        
+        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        .info-btn { background: var(--brand-gold); color: #000; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
         .info-btn:hover { background: white; transform: scale(1.05); }
+
+        /* 사운드 버튼 스타일 (OFF/ON) */
+        #sound-btn { background: #333; color: #fff; border: 1px solid #555; }
+        #sound-btn.active { background: #ff4444; color: white; border-color: #ff4444; animation: pulse 1s infinite; }
+        
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); } }
 
         /* 팝업창 */
         #info-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
@@ -72,7 +80,10 @@
         </div>
 
         <div class="right-panel">
-            <button class="info-btn" onclick="toggleModal()">💡 에너지 변신 원리 보기</button>
+            <div class="btn-group">
+                <button class="info-btn" onclick="toggleModal()">💡 원리 보기</button>
+                <button class="info-btn" id="sound-btn" onclick="toggleSound()">🔇 소리 켜기</button>
+            </div>
             
             <div style="font-size:1.5rem; font-weight:900; margin-bottom:10px; height:30px;" id="status-label">READY</div>
             
@@ -88,42 +99,98 @@
     </div>
 
     <script>
-        /* 1. 왼쪽 맵 (Context) */
+        /* ========================
+           1. 사운드 시스템 (Web Audio API)
+           ======================== */
+        let audioCtx;
+        let oscillator;
+        let gainNode;
+        let filterNode; // 소리를 부드럽게 만드는 필터
+        let isSoundOn = false;
+        const soundBtn = document.getElementById('sound-btn');
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function toggleSound() {
+            initAudio(); // 오디오 컨텍스트 준비
+            
+            if (isSoundOn) {
+                // 소리 끄기
+                if (oscillator) {
+                    oscillator.stop();
+                    oscillator.disconnect();
+                }
+                isSoundOn = false;
+                soundBtn.innerHTML = "🔇 소리 켜기";
+                soundBtn.classList.remove("active");
+            } else {
+                // 소리 켜기
+                oscillator = audioCtx.createOscillator();
+                gainNode = audioCtx.createGain();
+                filterNode = audioCtx.createBiquadFilter();
+
+                // 엔진음 만들기 (톱니파 + 로우패스 필터)
+                oscillator.type = 'sawtooth'; // 거친 기계음
+                filterNode.type = 'lowpass'; // 날카로운 소리 깎기
+                filterNode.frequency.value = 400; // 웅웅거리는 느낌
+
+                // RPM 초기값 반영
+                const currentSpeed = parseFloat(document.getElementById('speedRange').value);
+                oscillator.frequency.value = 60 + (currentSpeed * 800); 
+
+                gainNode.gain.value = 0.15; // 볼륨 (너무 크지 않게)
+
+                // 연결: 오실레이터 -> 필터 -> 볼륨 -> 스피커
+                oscillator.connect(filterNode);
+                filterNode.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.start();
+                isSoundOn = true;
+                soundBtn.innerHTML = "🔊 시동 끄기";
+                soundBtn.classList.add("active");
+            }
+        }
+
+        /* 2. 왼쪽 맵 (Context) */
         const mapCanvas = document.getElementById('mapCanvas');
         const mapCtx = mapCanvas.getContext('2d');
-        let engineGlow = 0; // 엔진 반짝임 효과용
+        let engineGlow = 0;
 
         function drawMap() {
             mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
             
             // 차체 프레임
             mapCtx.strokeStyle = "#444"; mapCtx.lineWidth = 3;
-            mapCtx.strokeRect(100, 80, 100, 240); // 몸통
+            mapCtx.strokeRect(100, 80, 100, 240); 
             mapCtx.fillStyle = "#333";
-            mapCtx.fillRect(70, 100, 30, 50); mapCtx.fillRect(200, 100, 30, 50); // 앞바퀴
-            mapCtx.fillRect(70, 260, 30, 50); mapCtx.fillRect(200, 260, 30, 50); // 뒷바퀴
+            mapCtx.fillRect(70, 100, 30, 50); mapCtx.fillRect(200, 100, 30, 50); 
+            mapCtx.fillRect(70, 260, 30, 50); mapCtx.fillRect(200, 260, 30, 50); 
 
-            // 엔진 위치 (앞쪽 중앙) - 애니메이션 효과
+            // 엔진 위치
             engineGlow += 0.1;
-            const alpha = (Math.sin(engineGlow) + 1) / 2 * 0.5 + 0.2; // 0.2 ~ 0.7 투명도 반복
+            const alpha = (Math.sin(engineGlow) + 1) / 2 * 0.5 + 0.2;
             
-            mapCtx.fillStyle = `rgba(255, 204, 0, ${alpha})`; // 금색 빛
+            mapCtx.fillStyle = `rgba(255, 204, 0, ${alpha})`;
             mapCtx.shadowBlur = 20; mapCtx.shadowColor = "#ffcc00";
-            mapCtx.fillRect(125, 100, 50, 50); // 엔진 블록
+            mapCtx.fillRect(125, 100, 50, 50);
             mapCtx.shadowBlur = 0;
 
             mapCtx.fillStyle = "#fff"; mapCtx.font = "bold 12px sans-serif";
             mapCtx.fillText("ENGINE", 128, 130);
             
-            // 강조 박스
             mapCtx.beginPath(); mapCtx.strokeStyle = "#ffcc00"; mapCtx.lineWidth = 2; mapCtx.setLineDash([5, 5]);
             mapCtx.rect(90, 90, 120, 70); mapCtx.stroke(); mapCtx.setLineDash([]);
 
             requestAnimationFrame(drawMap);
         }
-        drawMap(); // 맵 애니메이션 시작
+        drawMap();
 
-        /* 2. 오른쪽 시뮬레이터 (엔진 로직) */
+        /* 3. 오른쪽 시뮬레이터 (엔진 로직) */
         const canvas = document.getElementById('engineCanvas');
         const ctx = canvas.getContext('2d');
         const statusLabel = document.getElementById('status-label');
@@ -135,8 +202,16 @@
 
         function drawEngine() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            angle += parseFloat(speedRange.value);
+            
+            const speed = parseFloat(speedRange.value);
+            angle += speed;
             const cycleAngle = angle % (Math.PI * 4);
+
+            // 소리 주파수 업데이트 (RPM에 따라 톤 변경)
+            if(isSoundOn && oscillator) {
+                // 속도가 빠를수록 주파수(Hz)를 높임
+                oscillator.frequency.value = 60 + (speed * 1000);
+            }
 
             let state = ""; let color = "#fff";
             if (cycleAngle < Math.PI) { state = "1. 흡입 😋"; color = "#0096ff"; }
@@ -153,18 +228,15 @@
 
             // 실린더
             ctx.strokeStyle = "#444"; ctx.lineWidth = 5; ctx.strokeRect(centerX - cylinderWidth/2, 20, cylinderWidth, 140);
-            // 내부 색상 (행정별)
             ctx.fillStyle = color; ctx.globalAlpha = 0.2; ctx.fillRect(centerX - cylinderWidth/2, 20, cylinderWidth, pistonY - 20); ctx.globalAlpha = 1.0;
-            // 로드
+            // 로드 & 피스톤 & 크랭크
             ctx.beginPath(); ctx.moveTo(centerX, pistonY); ctx.lineTo(crankX, crankY); ctx.strokeStyle = "#777"; ctx.lineWidth = 12; ctx.stroke();
-            // 피스톤
             ctx.fillStyle = "#fff"; ctx.fillRect(centerX - cylinderWidth/2 + 5, pistonY - 20, cylinderWidth - 10, 35);
-            // 크랭크
             ctx.beginPath(); ctx.arc(crankX, crankY, 15, 0, Math.PI * 2); ctx.fillStyle = "#ffcc00"; ctx.fill();
 
             requestAnimationFrame(drawEngine);
         }
-        drawEngine(); // 엔진 애니메이션 시작
+        drawEngine();
 
         function toggleModal() {
             const modal = document.getElementById('info-modal');
