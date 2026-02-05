@@ -20,34 +20,32 @@
             overflow: hidden; /* 팝업 떴을 때 스크롤 방지 */
         }
 
-        /* [PRO] 백서 팝업 (모달) 스타일 - 글래스모피즘 적용 */
+        /* [PRO] 백서 팝업 (모달) 스타일 */
         #whitepaper-modal { 
             display: flex; 
             position: fixed; 
             top: 0; left: 0; 
             width: 100%; height: 100%; 
             background: rgba(0, 0, 0, 0.85); 
-            backdrop-filter: blur(8px); /* 고급스러운 블러 효과 */
+            backdrop-filter: blur(5px); /* 뒤에 있는 목차가 흐릿하게 보이도록 */
             z-index: 9999; 
             justify-content: center; 
             align-items: center; 
-            opacity: 0;
-            animation: fadeIn 0.8s forwards; /* 서서히 나타남 */
+            animation: fadeIn 0.5s forwards; 
         }
 
-        /* [PRO] 팝업 컨텐츠 및 등장 애니메이션 */
+        /* [PRO] 팝업 컨텐츠 */
         .wp-content { 
             width: 85%; 
             max-width: 480px; 
-            background: linear-gradient(145deg, #222, #1a1a1a); /* 은은한 그라데이션 */
+            background: linear-gradient(145deg, #222, #1a1a1a); 
             border: 1px solid rgba(255, 204, 0, 0.3); 
             padding: 40px 30px; 
             border-radius: 20px; 
             text-align: center; 
             box-shadow: 0 20px 60px rgba(0,0,0,0.6); 
-            transform: translateY(30px);
-            animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; /* 부드러운 상승 효과 */
-            animation-delay: 0.2s;
+            transform: translateY(20px);
+            animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
         .wp-badge { 
@@ -65,53 +63,35 @@
         .wp-title { color: #fff; font-size: 1.8rem; margin-bottom: 25px; font-weight: 800; letter-spacing: -1px; }
         
         .wp-text { 
-            color: #ccc; 
-            line-height: 1.7; 
-            text-align: left; 
-            font-size: 0.95rem; 
-            margin-bottom: 35px; 
-            background: rgba(255,255,255,0.03); 
-            padding: 20px; 
-            border-radius: 12px;
+            color: #ccc; line-height: 1.7; text-align: left; font-size: 0.95rem; margin-bottom: 35px; 
+            background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px;
         }
 
-        /* [PRO] 인터랙티브 버튼 */
         .enter-btn { 
-            background: var(--brand-gold); 
-            color: #121212; 
-            border: none; 
-            padding: 16px 50px; 
-            border-radius: 50px; 
-            font-weight: 800; 
-            font-size: 1.1rem; 
-            cursor: pointer; 
-            transition: all 0.3s ease; 
+            background: var(--brand-gold); color: #121212; border: none; padding: 16px 50px; 
+            border-radius: 50px; font-weight: 800; font-size: 1.1rem; cursor: pointer; transition: all 0.3s ease; 
             box-shadow: 0 5px 20px rgba(255, 204, 0, 0.4);
         }
-        .enter-btn:hover { 
-            background: #fff; 
-            transform: scale(1.05) translateY(-3px); 
-            box-shadow: 0 10px 25px rgba(255, 204, 0, 0.6);
-        }
+        .enter-btn:hover { background: #fff; transform: scale(1.05); box-shadow: 0 10px 25px rgba(255, 204, 0, 0.6); }
 
         /* 애니메이션 키프레임 */
-        @keyframes fadeIn { to { opacity: 1; } }
-        @keyframes slideUp { to { transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-
-        /* 메인 페이지 스타일 (기존 유지 + 디테일 업) */
-        .brand-header { text-align: center; margin-bottom: 40px; opacity: 0; animation: fadeIn 1s 1s forwards; /* 팝업 닫힌 후 서서히 보이게 */ }
-        .brand-tag { color: var(--brand-gold); font-size: 0.85rem; font-weight: bold; letter-spacing: 4px; margin-bottom: 10px; opacity: 0.8; }
+        /* [수정됨] 메인 페이지 스타일 - 숨김 효과(opacity: 0) 제거하여 바로 보이게 함 */
+        .brand-header { text-align: center; margin-bottom: 40px; }
+        .brand-tag { color: var(--brand-gold); font-size: 0.85rem; font-weight: bold; letter-spacing: 4px; margin-bottom: 10px; }
         .main-title { margin: 0; font-size: 2.6rem; letter-spacing: -1.5px; color: #fff; text-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .container { width: 90%; max-width: 420px; opacity: 0; animation: slideUp 0.8s 1.2s forwards; }
+        
+        .container { width: 90%; max-width: 420px; }
         
         .link-box { margin-bottom: 25px; position: relative; }
-        a { display: block; background: var(--card-bg); color: #fff; text-decoration: none; border: 1px solid #333; padding: 24px; border-radius: 18px; text-align: center; font-weight: bold; font-size: 1.15rem; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-        a:hover { border-color: var(--brand-gold); background: rgba(255, 204, 0, 0.05); transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
+        a { display: block; background: var(--card-bg); color: #fff; text-decoration: none; border: 1px solid #333; padding: 24px; border-radius: 18px; text-align: center; font-weight: bold; font-size: 1.15rem; transition: all 0.3s; }
+        a:hover { border-color: var(--brand-gold); background: rgba(255, 204, 0, 0.05); transform: translateY(-5px); }
         .step-badge { position: absolute; top: -10px; left: 20px; background: var(--brand-gold); color: #000; padding: 4px 12px; border-radius: 6px; font-size: 0.7rem; font-weight: 900; z-index: 10; letter-spacing: 1px; }
         .desc-text { display: block; font-size: 0.85rem; font-weight: normal; color: #888; margin-top: 8px; }
         
-        .footer-note { text-align: center; color: #444; margin-top: 50px; font-size: 0.85rem; border-top: 1px solid #222; padding-top: 20px; width: 100%; opacity: 0; animation: fadeIn 1s 1.5s forwards; }
+        .footer-note { text-align: center; color: #444; margin-top: 50px; font-size: 0.85rem; border-top: 1px solid #222; padding-top: 20px; width: 100%; }
     </style>
 </head>
 <body>
