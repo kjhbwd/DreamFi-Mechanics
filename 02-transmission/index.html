@@ -3,105 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DreamFi #02: 기어의 비밀</title>
+    <title>Dream-Fi #02: 변속기</title>
     <style>
-        body { background: #121212; color: #eee; font-family: 'Malgun Gothic', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        #easy-guide { width: 340px; min-height: 80px; background: rgba(255, 204, 0, 0.1); border: 2px solid #ffcc00; border-radius: 15px; margin-bottom: 15px; padding: 15px; text-align: center; font-size: 1.1rem; color: #ffcc00; font-weight: bold; line-height: 1.5; }
-        #info-btn { margin-bottom: 10px; background: #ffcc00; color: #000; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; }
-        #canvas-container { position: relative; background: #1e1e1e; border: 4px solid #333; border-radius: 25px; padding: 10px; overflow: hidden; }
-        #info-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; background: #222; border: 3px solid #ffcc00; padding: 20px; border-radius: 20px; z-index: 100; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
-        .btn-group { margin-top: 20px; display: flex; gap: 10px; width: 340px; }
-        .gear-btn { flex: 1; background: #333; color: white; border: 2px solid #555; padding: 12px 0; cursor: pointer; border-radius: 12px; font-weight: bold; }
-        .active { background: #ffcc00; color: black; border-color: #fff; }
+        /* [전역 스타일] */
+        :root { --brand-gold: #ffcc00; --bg-dark: #121212; --panel-bg: #1e1e1e; }
+        body { background: var(--bg-dark); color: white; font-family: 'Pretendard', 'Malgun Gothic', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* 헤더 */
+        header { height: 60px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #333; background: #111; z-index: 10; }
+        .brand-title { color: var(--brand-gold); font-weight: 800; letter-spacing: 1px; font-size: 1.2rem; }
+
+        /* 메인 컨테이너 (50:50) */
+        .main-container { display: flex; flex: 1; height: calc(100vh - 60px); }
+
+        /* [왼쪽] 전체 맵 */
+        .left-panel { flex: 1; background: radial-gradient(circle at center, #2a2a2a, #121212); border-right: 1px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .panel-label { position: absolute; top: 20px; left: 20px; color: #555; font-size: 0.8rem; font-weight: bold; border: 1px solid #555; padding: 5px 10px; border-radius: 5px; }
+
+        /* [오른쪽] 시뮬레이터 */
+        .right-panel { flex: 1; background: var(--panel-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+
+        canvas { max-width: 100%; max-height: 100%; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); }
+
+        /* 컨트롤러 UI */
+        .controls-box { width: 80%; text-align: center; margin-top: 20px; }
+        input[type=range] { width: 100%; accent-color: var(--brand-gold); cursor: pointer; height: 8px; border-radius: 5px; }
+        
+        .info-btn { background: var(--brand-gold); color: #000; border: none; padding: 10px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-bottom: 20px; transition: 0.3s; }
+        .info-btn:hover { background: white; transform: scale(1.05); }
+
+        /* 상태 텍스트 */
+        .status-display { display: flex; justify-content: space-around; width: 100%; margin-bottom: 10px; font-size: 0.9rem; color: #aaa; }
+        .status-value { font-size: 1.2rem; font-weight: bold; color: white; display: block; margin-top: 5px; }
+
+        /* 팝업창 */
+        #info-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: #222; border: 2px solid var(--brand-gold); padding: 30px; border-radius: 20px; width: 320px; text-align: center; box-shadow: 0 0 30px rgba(255,204,0,0.2); }
+        .nav-back { position: absolute; bottom: 20px; right: 20px; color: #666; text-decoration: none; font-size: 0.8rem; }
+
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; overflow-y: auto; }
+            .left-panel { flex: 0.8; min-height: 250px; border-right: none; border-bottom: 1px solid #333; }
+            .right-panel { flex: 1.2; }
+            body { overflow: auto; }
+        }
     </style>
 </head>
 <body>
 
-    <h2 style="color:#ffcc00; margin-bottom:10px;">Vibe Engineering #02</h2>
-    <button id="info-btn" onclick="toggleModal()">💡 거대 바퀴의 비밀 보기</button>
-    <div id="easy-guide">1단은 왜 바퀴가 커질까요?</div>
-
-    <div id="canvas-container">
-        <div id="info-modal">
-            <h3 style="color:#ffcc00; margin-top:0;">1단은 '힘센 거인'! 👹</h3>
-            <p style="font-size: 0.85rem; line-height: 1.7; text-align: left;">
-                무거운 차를 처음 밀 때는 <b>커다란 톱니바퀴</b>가 필요해요. 엔진이 10번 돌 때 바퀴를 1번만 돌리게 만들면, 에너지가 응축되어 엄청난 힘이 생기거든요!<br><br>
-                그래서 1단은 바퀴가 <b>제일 크고 느리지만, 힘은 천하장사</b>랍니다!
+    <div id="info-modal">
+        <div class="modal-content">
+            <h3 style="color:var(--brand-gold); margin-top:0;">기어의 마법 (힘 vs 속도) ⚖️</h3>
+            <p style="text-align: left; line-height: 1.6; color: #ddd; font-size: 0.95rem;">
+                <b>1단 (저단):</b> 힘이 아주 세요! 💪<br>
+                (무거운 차를 처음 밀 때 필요해요)<br><br>
+                <b>3단 (고단):</b> 힘은 약하지만 빨라요! 🚀<br>
+                (이미 달리고 있을 때 더 빨리 가요)<br><br>
+                변속기는 이 <b>힘과 속도를 교환</b>하는 마법 상자랍니다.
             </p>
-            <button onclick="toggleModal()" style="background:#444; color:#fff; border:none; padding:8px 20px; border-radius:10px; cursor:pointer;">이해했어요!</button>
+            <button onclick="toggleModal()" style="background:#444; color:#fff; border:none; padding:10px 30px; border-radius:8px; cursor:pointer;">이해했어요!</button>
         </div>
-        <canvas id="gearCanvas" width="340" height="240"></canvas>
     </div>
 
-    <div class="btn-group">
-        <button onclick="setGear(1)" id="gear1" class="gear-btn active">1단 (영차!)</button>
-        <button onclick="setGear(2)" id="gear2" class="gear-btn">2단 (적당히)</button>
-        <button onclick="setGear(3)" id="gear3" class="gear-btn">3단 (쌩쌩~)</button>
+    <header>
+        <div class="brand-title">DREAM-FI MECHANICS #02</div>
+    </header>
+
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="panel-label">📍 CAR DIAGNOSTIC MAP</div>
+            <canvas id="mapCanvas" width="300" height="400"></canvas>
+            <div style="color:#666; font-size:0.8rem; margin-top:10px;">▲ 현재 작동 부위: <span style="color:var(--brand-gold);">변속기 (기어박스)</span></div>
+        </div>
+
+        <div class="right-panel">
+            <button class="info-btn" onclick="toggleModal()">💡 기어 변신 원리 보기</button>
+            
+            <div class="status-display">
+                <div style="text-align:center;">힘 (Torque)<span class="status-value" id="torque-val" style="color:#ffcc00;">최대</span></div>
+                <div style="text-align:center;">속도 (Speed)<span class="status-value" id="speed-val" style="color:#00ff64;">느림</span></div>
+            </div>
+
+            <canvas id="gearCanvas" width="320" height="250"></canvas>
+            
+            <div class="controls-box">
+                <div style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">기어 단수 조절 (Gear Shift)</div>
+                <input type="range" id="gearRange" min="1" max="3" step="1" value="1">
+                <div id="gearText" style="color:white; font-weight:bold; margin-top:5px; font-size: 1.2rem;">1단 (출발)</div>
+            </div>
+            
+            <a href="../index.html" class="nav-back">← 목차로</a>
+        </div>
     </div>
 
     <script>
-        function toggleModal() {
-            const modal = document.getElementById('info-modal');
-            modal.style.display = (modal.style.display === 'block') ? 'none' : 'block';
-        }
+        /* 1. 왼쪽 맵 (Context) */
+        const mapCanvas = document.getElementById('mapCanvas');
+        const mapCtx = mapCanvas.getContext('2d');
+        let gearGlow = 0;
 
+        function drawMap() {
+            mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+            
+            // 차체
+            mapCtx.strokeStyle = "#444"; mapCtx.lineWidth = 3; mapCtx.strokeRect(100, 80, 100, 240);
+            mapCtx.fillStyle = "#333";
+            mapCtx.fillRect(70, 100, 30, 50); mapCtx.fillRect(200, 100, 30, 50); // 앞바퀴
+            mapCtx.fillRect(70, 260, 30, 50); mapCtx.fillRect(200, 260, 30, 50); // 뒷바퀴
+
+            // 변속기 위치 (엔진 뒤쪽 중앙)
+            gearGlow += 0.08;
+            const alpha = (Math.sin(gearGlow) + 1) / 2 * 0.5 + 0.2;
+            
+            mapCtx.fillStyle = `rgba(0, 255, 100, ${alpha})`; // 초록빛 (기계적 느낌)
+            mapCtx.shadowBlur = 20; mapCtx.shadowColor = "#00ff64";
+            mapCtx.fillRect(130, 160, 40, 40); // 기어박스 위치
+            mapCtx.shadowBlur = 0;
+
+            // 엔진 연결선
+            mapCtx.strokeStyle = "#666"; mapCtx.lineWidth = 4;
+            mapCtx.beginPath(); mapCtx.moveTo(150, 130); mapCtx.lineTo(150, 160); mapCtx.stroke();
+
+            // 구동축 연결선
+            mapCtx.beginPath(); mapCtx.moveTo(150, 200); mapCtx.lineTo(150, 260); 
+            mapCtx.lineTo(100, 285); mapCtx.moveTo(150, 260); mapCtx.lineTo(200, 285); mapCtx.stroke();
+
+            mapCtx.fillStyle = "#fff"; mapCtx.font = "bold 10px sans-serif";
+            mapCtx.fillText("GEARBOX", 125, 185);
+            
+            // 강조 박스
+            mapCtx.beginPath(); mapCtx.strokeStyle = "#00ff64"; mapCtx.lineWidth = 2; mapCtx.setLineDash([5, 5]);
+            mapCtx.rect(110, 150, 80, 60); mapCtx.stroke(); mapCtx.setLineDash([]);
+
+            requestAnimationFrame(drawMap);
+        }
+        drawMap();
+
+        /* 2. 오른쪽 시뮬레이터 (변속기 로직) */
         const canvas = document.getElementById('gearCanvas');
         const ctx = canvas.getContext('2d');
-        const easyGuide = document.getElementById('easy-guide');
+        const gearRange = document.getElementById('gearRange');
+        const gearText = document.getElementById('gearText');
+        const torqueVal = document.getElementById('torque-val');
+        const speedVal = document.getElementById('speed-val');
 
-        let engineAngle = 0;
-        let wheelAngle = 0;
-        let currentGear = 1;
+        let angleInput = 0; // 엔진(입력) 각도
+        let angleOutput = 0; // 바퀴(출력) 각도
+        
+        // 기어비 설정 (입력 회전수 대비 출력 회전수)
+        // 1단: 엔진 3번 돌 때 바퀴 1번 (힘↑ 속도↓)
+        // 3단: 엔진 1번 돌 때 바퀴 1.5번 (힘↓ 속도↑)
+        const gearRatios = { 1: 0.33, 2: 1.0, 3: 1.5 };
+        const gearColors = { 1: "#ffcc00", 2: "#0096ff", 3: "#ff0055" }; // 1단:노랑, 2단:파랑, 3단:빨강
 
-        const gearData = {
-            1: { ratio: 0.3, eColor: "#ff4400", wColor: "#00ff64", desc: "1단: 바퀴가 커졌죠? <br>무거운 차를 움직이는 '천하장사' 힘!" },
-            2: { ratio: 1.0, eColor: "#ffcc00", wColor: "#0096ff", desc: "2단: 이제 속도를 좀 내볼까요? <br>적당한 힘과 속도!" },
-            3: { ratio: 2.5, eColor: "#ffffff", wColor: "#ff6400", desc: "3단: 바퀴가 작아지며 빨라져요! <br>고속도로 쌩쌩 모드!" }
-        };
+        function drawGearSim() {
+            const gear = parseInt(gearRange.value);
+            const ratio = gearRatios[gear];
+            
+            // 엔진은 항상 일정한 속도로 돔 (가정)
+            const inputSpeed = 3; 
+            const outputSpeed = inputSpeed * ratio;
 
-        function setGear(g) {
-            currentGear = g;
-            easyGuide.innerHTML = gearData[g].desc;
-            document.querySelectorAll('.gear-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('gear' + g).classList.add('active');
+            angleInput += inputSpeed;
+            angleOutput += outputSpeed;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. 작은 기어 (엔진 쪽, 입력) - 항상 일정 크기
+            drawGear(80, 125, 40, angleInput, "#888", "엔진 힘");
+
+            // 2. 큰 기어 (바퀴 쪽, 출력) - 기어단수에 따라 크기 변함
+            // 1단일 때 큼(힘셈), 3단일 때 작음(빠름)
+            let outputRadius = 40 / ratio; 
+            if(outputRadius > 70) outputRadius = 70; // 최대 크기 제한
+            if(outputRadius < 25) outputRadius = 25; // 최소 크기 제한
+
+            drawGear(220, 125, outputRadius, -angleOutput, gearColors[gear], "바퀴 전달");
+
+            // 연결 체인/벨트 느낌
+            ctx.strokeStyle = "#555"; ctx.lineWidth = 5; ctx.setLineDash([5,5]);
+            ctx.beginPath();
+            ctx.moveTo(80, 85); ctx.lineTo(220, 125 - outputRadius); // 위
+            ctx.moveTo(80, 165); ctx.lineTo(220, 125 + outputRadius); // 아래
+            ctx.stroke(); ctx.setLineDash([]);
+
+            // 텍스트 업데이트
+            updateText(gear);
+
+            requestAnimationFrame(drawGearSim);
         }
 
-        function drawGear(x, y, radius, angle, color, teeth, label) {
+        function drawGear(x, y, radius, angle, color, label) {
             ctx.save();
             ctx.translate(x, y);
-            ctx.rotate(angle);
+            ctx.rotate(angle * Math.PI / 180);
+            
+            // 기어 몸통
             ctx.fillStyle = color;
-            ctx.shadowBlur = 10; ctx.shadowColor = color;
-            for (let i = 0; i < teeth; i++) {
-                ctx.rotate(Math.PI * 2 / teeth);
-                ctx.fillRect(radius - 5, -6, 12, 12);
+            ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI*2); ctx.fill();
+            
+            // 기어 이빨 (시각효과)
+            ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 5;
+            for(let i=0; i<8; i++) {
+                ctx.beginPath(); ctx.moveTo(radius-5, 0); ctx.lineTo(radius+5, 0); ctx.stroke();
+                ctx.rotate(Math.PI/4);
             }
-            ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
+            
+            // 십자 표시 (회전 확인용)
+            ctx.strokeStyle = "#222"; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(10, 0); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(0, 10); ctx.stroke();
+
             ctx.restore();
 
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = color;
-            ctx.font = "bold 13px sans-serif";
-            // 글씨 위치를 기어 아래쪽에 고정
-            ctx.fillText(label, x - 30, 220); 
+            // 라벨
+            ctx.fillStyle = "#fff"; ctx.font = "12px sans-serif"; ctx.textAlign = "center";
+            ctx.fillText(label, x, y + radius + 20);
         }
 
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            let speed = 0.04;
-            engineAngle += speed * (currentGear === 1 ? 1.8 : 1);
-            wheelAngle += speed * (currentGear === 1 ? 1.8 : 1) * gearData[currentGear].ratio;
-
-            // 엔진 기어 크기 고정
-            drawGear(80, 100, 25, engineAngle, gearData[currentGear].eColor, 10, "엔진 (동력)");
-
-            // 바퀴 기어 크기 (화면 밖으로 안 나가게 비율 조정)
-            const wheelSize = 25 * (0.8 / gearData[currentGear].ratio);
-            drawGear(220, 100, wheelSize, -wheelAngle, gearData[currentGear].wColor, 18, "바퀴 (전달)");
-
-            requestAnimationFrame(animate);
+        function updateText(gear) {
+            if(gear === 1) {
+                gearText.innerHTML = "1단 (출발/오르막)";
+                gearText.style.color = "#ffcc00";
+                torqueVal.innerText = "최강 💪"; speedVal.innerText = "느림 🐢";
+            } else if(gear === 2) {
+                gearText.innerHTML = "2단 (주행)";
+                gearText.style.color = "#0096ff";
+                torqueVal.innerText = "보통 😐"; speedVal.innerText = "보통 🚗";
+            } else {
+                gearText.innerHTML = "3단 (고속)";
+                gearText.style.color = "#ff0055";
+                torqueVal.innerText = "약함 💧"; speedVal.innerText = "빠름 🚀";
+            }
         }
-        setGear(1); animate();
+
+        function toggleModal() {
+            const modal = document.getElementById('info-modal');
+            modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+        }
+        
+        gearRange.addEventListener('input', () => {}); // 이벤트 리스너 (값 변경 즉시 반영됨)
+        drawGearSim();
+
     </script>
 </body>
 </html>
