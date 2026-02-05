@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream-Fi #03: 조향 장치</title>
+    <style>
+        /* [전역 스타일] 드림파이 다크 모드 */
+        :root { --brand-gold: #ffcc00; --bg-dark: #121212; --panel-bg: #1e1e1e; }
+        body { 
+            background: var(--bg-dark); 
+            color: white; 
+            font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
+            margin: 0; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; /* 스크롤 방지 (앱 느낌) */
+        }
+
+        /* 상단 헤더 */
+        header { 
+            height: 60px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-bottom: 1px solid #333; 
+            background: #111;
+            z-index: 10;
+        }
+        .brand-title { color: var(--brand-gold); font-weight: 800; letter-spacing: 1px; font-size: 1.2rem; }
+
+        /* 메인 컨테이너 (50:50 분할) */
+        .main-container { 
+            display: flex; 
+            flex: 1; 
+            height: calc(100vh - 60px); 
+        }
+
+        /* [왼쪽 패널] 전체 맵 (Context) */
+        .left-panel { 
+            flex: 1; 
+            background: radial-gradient(circle at center, #2a2a2a, #121212); 
+            border-right: 1px solid #333; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            position: relative;
+        }
+        .panel-label { 
+            position: absolute; 
+            top: 20px; left: 20px; 
+            color: #555; font-size: 0.8rem; font-weight: bold; border: 1px solid #555; padding: 5px 10px; border-radius: 5px; 
+        }
+
+        /* [오른쪽 패널] 정밀 시뮬레이터 (Detail) */
+        .right-panel { 
+            flex: 1; 
+            background: var(--panel-bg); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px;
+        }
+
+        /* 공통 캔버스 스타일 */
+        canvas { 
+            max-width: 100%; 
+            max-height: 100%; 
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); 
+        }
+
+        /* 컨트롤러 UI */
+        .controls-box { width: 80%; text-align: center; margin-top: 20px; }
+        input[type=range] { width: 100%; accent-color: var(--brand-gold); cursor: pointer; height: 8px; border-radius: 5px; }
+        
+        .info-btn { 
+            background: var(--brand-gold); color: #000; border: none; 
+            padding: 10px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; 
+            margin-bottom: 20px; transition: 0.3s; 
+        }
+        .info-btn:hover { background: white; transform: scale(1.05); }
+
+        /* 모바일 반응형 (세로 배치) */
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; overflow-y: auto; }
+            .left-panel { flex: 0.8; min-height: 250px; border-right: none; border-bottom: 1px solid #333; }
+            .right-panel { flex: 1.2; }
+            body { overflow: auto; }
+        }
+
+        /* 팝업창 스타일 */
+        #info-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; }
+        .modal-content { background: #222; border: 2px solid var(--brand-gold); padding: 30px; border-radius: 20px; width: 300px; text-align: center; }
+        
+        .nav-back { position: absolute; bottom: 20px; right: 20px; color: #666; text-decoration: none; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+    <div id="info-modal">
+        <div class="modal-content">
+            <h3 style="color:var(--brand-gold); margin-top:0;">랙 앤 피니언 🪄</h3>
+            <p style="text-align: left; line-height: 1.6; color: #ddd; font-size: 0.9rem;">
+                <b>1. 회전 운동 (핸들):</b><br> 우리가 핸들을 돌리면 톱니바퀴(피니언)가 돌아요.<br><br>
+                <b>2. 직선 운동 (랙):</b><br> 톱니바퀴가 빨래판 같은 긴 막대(랙)를 옆으로 밀어버리죠.<br><br>
+                결국 <b>"도는 힘"</b>이 <b>"미는 힘"</b>으로 바뀌어 바퀴를 꺾는 거랍니다!
+            </p>
+            <button onclick="toggleModal()" style="background:#444; color:#fff; border:none; padding:8px 20px; border-radius:5px; cursor:pointer;">닫기</button>
+        </div>
+    </div>
+
+    <header>
+        <div class="brand-title">DREAM-FI MECHANICS #03</div>
+    </header>
+
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="panel-label">📍 CAR DIAGNOSTIC MAP</div>
+            <canvas id="mapCanvas" width="300" height="400"></canvas>
+            <div style="color:#666; font-size:0.8rem; margin-top:10px;">▲ 현재 작동 부위: <span style="color:var(--brand-gold);">전륜 조향축</span></div>
+        </div>
+
+        <div class="right-panel">
+            <button class="info-btn" onclick="toggleModal()">💡 원리 설명 보기</button>
+            <canvas id="simCanvas" width="340" height="250"></canvas>
+            
+            <div class="controls-box">
+                <div style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">핸들 조작 (Steering Wheel)</div>
+                <input type="range" id="steerRange" min="-45" max="45" step="1" value="0">
+                <div id="angleText" style="color:var(--brand-gold); font-weight:bold; margin-top:5px;">0°</div>
+            </div>
+            
+            <a href="../index.html" class="nav-back">← 목차로</a>
+        </div>
+    </div>
+
+    <script>
+        /* --- 공통 변수 --- */
+        const steerRange = document.getElementById('steerRange');
+        const angleText = document.getElementById('angleText');
+        let currentAngle = 0;
+
+        /* --- 1. 왼쪽 맵 캔버스 (Map) --- */
+        const mapCanvas = document.getElementById('mapCanvas');
+        const mapCtx = mapCanvas.getContext('2d');
+
+        function drawMap() {
+            mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+            
+            // 차체 프레임 (간단한 뼈대)
+            mapCtx.strokeStyle = "#444"; mapCtx.lineWidth = 3;
+            mapCtx.strokeRect(100, 80, 100, 240); // 몸통
+            
+            // 뒷바퀴 (고정)
+            mapCtx.fillStyle = "#333";
+            mapCtx.fillRect(70, 260, 30, 50); // 좌후
+            mapCtx.fillRect(200, 260, 30, 50); // 우후
+
+            // 앞바퀴 (회전 - 조향 반영)
+            // 좌전
+            mapCtx.save();
+            mapCtx.translate(85, 100); 
+            mapCtx.rotate(currentAngle * Math.PI / 180);
+            mapCtx.fillStyle = (Math.abs(currentAngle) > 0) ? "#00ff64" : "#555"; // 움직이면 색상 변경
+            mapCtx.shadowBlur = 10; mapCtx.shadowColor = (Math.abs(currentAngle) > 0) ? "#00ff64" : "transparent";
+            mapCtx.fillRect(-15, -25, 30, 50);
+            mapCtx.restore();
+
+            // 우전
+            mapCtx.save();
+            mapCtx.translate(215, 100);
+            mapCtx.rotate(currentAngle * Math.PI / 180);
+            mapCtx.fillStyle = (Math.abs(currentAngle) > 0) ? "#00ff64" : "#555";
+            mapCtx.shadowBlur = 10; mapCtx.shadowColor = (Math.abs(currentAngle) > 0) ? "#00ff64" : "transparent";
+            mapCtx.fillRect(-15, -25, 30, 50);
+            mapCtx.restore();
+
+            // 강조 표시 (현재 학습 부위)
+            mapCtx.shadowBlur = 0;
+            mapCtx.beginPath();
+            mapCtx.strokeStyle = "#ffcc00"; mapCtx.lineWidth = 2; mapCtx.setLineDash([5, 5]);
+            mapCtx.rect(50, 60, 200, 100); // 앞부분 강조 박스
+            mapCtx.stroke();
+            mapCtx.setLineDash([]);
+        }
+
+        /* --- 2. 오른쪽 시뮬레이터 캔버스 (Detail) --- */
+        const simCanvas = document.getElementById('simCanvas');
+        const simCtx = simCanvas.getContext('2d');
+
+        function drawSim() {
+            simCtx.clearRect(0, 0, simCanvas.width, simCanvas.height);
+            
+            // 좌표 설정 (중앙)
+            const cx = simCanvas.width / 2;
+            const cy = 100;
+            
+            // 랙(Rack) 이동 거리
+            const rackMove = currentAngle * -0.8;
+
+            // 바퀴 그리기 함수
+            function drawDetailWheel(x, y, isLeft) {
+                simCtx.save();
+                simCtx.translate(x, y);
+                simCtx.rotate(currentAngle * Math.PI / 180);
+                
+                // 타이어
+                simCtx.fillStyle = "#222";
+                simCtx.beginPath(); simCtx.roundRect(-20, -40, 40, 80, 5); simCtx.fill();
+                // 휠
+                simCtx.strokeStyle = "#888"; simCtx.lineWidth=2; simCtx.strokeRect(-12, -30, 24, 60);
+                
+                simCtx.restore();
+
+                // 타이로드 (바퀴랑 랙 연결선)
+                simCtx.beginPath();
+                simCtx.strokeStyle = "#aaa"; simCtx.lineWidth = 4;
+                simCtx.moveTo(x + (isLeft ? 20 : -20), y); // 바퀴 쪽
+                simCtx.lineTo(cx + (isLeft ? -80 : 80) + rackMove, cy + 40); // 랙 쪽
+                simCtx.stroke();
+                
+                // 관절 점
+                simCtx.fillStyle = "#ffcc00";
+                simCtx.beginPath(); simCtx.arc(x + (isLeft ? 20 : -20), y, 5, 0, Math.PI*2); simCtx.fill();
+            }
+
+            drawDetailWheel(50, cy, true);  // 왼쪽 바퀴
+            drawDetailWheel(290, cy, false); // 오른쪽 바퀴
+
+            // 랙 (Rack) - 가로로 움직이는 막대
+            simCtx.fillStyle = "#555";
+            simCtx.fillRect(cx - 100 + rackMove, cy + 35, 200, 15);
+            
+            // 랙의 톱니
+            simCtx.fillStyle = "#999";
+            for(let i=0; i<15; i++) {
+                simCtx.fillRect(cx - 90 + rackMove + (i*12), cy + 35, 6, 8);
+            }
+
+            // 피니언 (Pinion) - 핸들 축 기어
+            simCtx.beginPath();
+            simCtx.arc(cx, cy + 42, 20, 0, Math.PI*2);
+            simCtx.fillStyle = "rgba(255, 204, 0, 0.8)"; // 반투명 노랑
+            simCtx.fill();
+            
+            // 핸들 회전 시각화 (기어 안에 십자선이 돔)
+            simCtx.save();
+            simCtx.translate(cx, cy + 42);
+            simCtx.rotate(currentAngle * 2 * Math.PI / 180); // 기어는 더 빨리 돔
+            simCtx.strokeStyle = "#000"; simCtx.lineWidth = 2;
+            simCtx.beginPath(); simCtx.moveTo(-20, 0); simCtx.lineTo(20, 0); simCtx.stroke();
+            simCtx.beginPath(); simCtx.moveTo(0, -20); simCtx.lineTo(0, 20); simCtx.stroke();
+            simCtx.restore();
+
+            // 텍스트 라벨
+            simCtx.fillStyle = "#fff"; simCtx.font = "bold 12px sans-serif";
+            simCtx.fillText("랙 (직선운동)", cx + rackMove - 30, cy + 80);
+            simCtx.fillStyle = "#ffcc00";
+            simCtx.fillText("피니언 (회전)", cx - 35, cy + 10);
+        }
+
+        /* --- 통합 제어 --- */
+        function update() {
+            currentAngle = parseInt(steerRange.value);
+            angleText.innerText = currentAngle + "°";
+            
+            drawMap(); // 왼쪽 그림 업데이트
+            drawSim(); // 오른쪽 그림 업데이트
+            
+            requestAnimationFrame(update);
+        }
+
+        /* --- 이벤트 리스너 --- */
+        steerRange.addEventListener('input', update);
+        function toggleModal() {
+            const modal = document.getElementById('info-modal');
+            modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        // 초기 실행
+        update();
+
+    </script>
+</body>
+</html>
