@@ -3,259 +3,347 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dream-Fi #04: 제동 장치 (조립 구조)</title>
+    <title>Dream-Fi #04: 제동 장치 (Premium)</title>
     <style>
-        :root { --brand-gold: #ffcc00; --brand-red: #ff4444; --bg-dark: #121212; --panel-bg: #1e1e1e; }
+        :root { --brand-gold: #ffcc00; --brand-red: #d92525; --bg-dark: #0f0f0f; --panel-bg: #1a1a1a; }
         body { background: var(--bg-dark); color: white; font-family: 'Pretendard', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        header { height: 60px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #333; background: #111; z-index: 10; }
-        .brand-title { color: var(--brand-red); font-weight: 800; letter-spacing: 1px; font-size: 1.2rem; }
+        header { height: 60px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #333; background: #000; z-index: 10; }
+        .brand-title { color: var(--brand-red); font-weight: 900; letter-spacing: 1px; font-size: 1.2rem; text-transform: uppercase; }
 
         .main-container { display: flex; flex: 1; height: calc(100vh - 60px); }
 
-        /* 왼쪽 패널: 3D 부품 뷰 */
-        .left-panel { flex: 1; background: radial-gradient(circle at center, #2a2a2a, #000); border-right: 1px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: grab; }
+        /* 왼쪽 패널: 고급스러운 쇼룸 조명 */
+        .left-panel { flex: 1; background: radial-gradient(circle at center, #333 0%, #000 80%); border-right: 1px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: grab; }
         .left-panel:active { cursor: grabbing; }
-        .panel-label { position: absolute; top: 20px; left: 20px; color: #aaa; font-size: 0.8rem; font-weight: bold; border: 1px solid #555; padding: 5px 10px; border-radius: 5px; background: rgba(0,0,0,0.5); }
-        .mouse-guide { position: absolute; bottom: 20px; color: #888; font-size: 0.8rem; animation: blink 2s infinite; pointer-events: none; }
-
-        /* 오른쪽 패널: 분해 조작 */
-        .right-panel { flex: 1; background: var(--panel-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; border-left: 1px solid #333; }
-
-        canvas { max-width: 100%; max-height: 100%; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.8)); }
-
-        .controls-box { width: 80%; text-align: center; margin-top: 40px; }
-        input[type=range] { width: 100%; accent-color: var(--brand-gold); cursor: pointer; height: 8px; border-radius: 5px; }
         
-        .part-list { width: 80%; text-align: left; margin-bottom: 20px; }
-        .part-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #333; font-size: 0.9rem; color: #888; transition: 0.3s; }
-        .part-item.active { color: white; font-weight: bold; border-bottom: 1px solid var(--brand-red); }
-        .part-name { color: var(--brand-gold); }
+        /* 뱃지 디자인 강화 */
+        .panel-label { position: absolute; top: 20px; left: 20px; color: #fff; font-size: 0.75rem; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 30px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); letter-spacing: 1px; }
 
-        .nav-back { position: absolute; bottom: 20px; right: 20px; color: #666; text-decoration: none; font-size: 0.8rem; }
-        @keyframes blink { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        .right-panel { flex: 1; background: var(--panel-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; border-left: 1px solid #222; }
 
-        @media (max-width: 768px) {
-            .main-container { flex-direction: column; overflow-y: auto; }
-            .left-panel { flex: 0.8; min-height: 350px; border-right: none; border-bottom: 1px solid #333; }
-            .right-panel { flex: 1.2; }
-            body { overflow: auto; }
+        canvas { max-width: 100%; max-height: 100%; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.9)); }
+
+        .controls-box { width: 85%; text-align: center; margin-top: 30px; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 15px; border: 1px solid #333; }
+        
+        /* 슬라이더 디자인 커스텀 */
+        input[type=range] { width: 100%; -webkit-appearance: none; background: #333; height: 6px; border-radius: 3px; outline: none; margin: 15px 0; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: var(--brand-gold); border-radius: 50%; cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 10px var(--brand-gold); }
+
+        .part-list { width: 85%; text-align: left; margin-bottom: 10px; }
+        .part-item { 
+            display: flex; justify-content: space-between; padding: 14px; 
+            border-bottom: 1px solid #333; font-size: 0.95rem; color: #666; 
+            cursor: pointer; transition: all 0.3s;
         }
+        .part-item:hover { color: #aaa; background: rgba(255,255,255,0.05); }
+        .part-item.active { color: white; background: linear-gradient(90deg, rgba(255,68,68,0.1), transparent); border-left: 3px solid var(--brand-red); padding-left: 11px; }
+        .part-name { font-weight: bold; }
+
+        /* 팝업창 스타일 강화 */
+        #info-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.3s; }
+        #info-modal.show { opacity: 1; }
+        
+        .modal-content { 
+            background: #151515; border: 1px solid #444; width: 360px; text-align: left; 
+            border-radius: 20px; overflow: hidden; box-shadow: 0 0 60px rgba(0,0,0,0.8);
+            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #info-modal.show .modal-content { transform: scale(1); }
+
+        .modal-header { background: #222; padding: 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 30px; }
+        .tag-badge { font-size: 0.7rem; font-weight: bold; background: #333; color: #aaa; padding: 4px 8px; border-radius: 4px; margin-bottom: 10px; display: inline-block; }
+        
+        .nav-back { position: absolute; bottom: 20px; right: 20px; color: #555; text-decoration: none; font-size: 0.8rem; transition: 0.3s; }
+        .nav-back:hover { color: var(--brand-gold); }
     </style>
 </head>
 <body>
 
+    <div id="info-modal" onclick="closeModal(event)">
+        <div class="modal-content" id="modal-box">
+            <div class="modal-header">
+                <span id="m-title" style="font-size:1.2rem; font-weight:bold; color:white;">TITLE</span>
+                <button onclick="closeModalBtn()" style="background:none; border:none; color:#666; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tag-badge">공학적 정의 (Engineering)</div>
+                <p id="m-desc-eng" style="color:#ccc; font-size:0.9rem; line-height:1.6; margin-bottom:25px;">...</p>
+                
+                <div class="tag-badge" style="background: rgba(255,204,0,0.15); color:var(--brand-gold);">직관적 이해 (Vibe)</div>
+                <p id="m-desc-vibe" style="color:#fff; font-size:1.05rem; font-weight:bold; line-height:1.5;">...</p>
+            </div>
+        </div>
+    </div>
+
     <header>
-        <div class="brand-title">DREAM-FI MECHANICS #04</div>
+        <div class="brand-title">DREAM-FI MECHANICS <span style="color:#444;">|</span> 04</div>
     </header>
 
     <div class="main-container">
         <div class="left-panel" id="map-container">
-            <div class="panel-label">📍 WHEEL ASSEMBLY (Exploded View)</div>
+            <div class="panel-label">EXPLODED VIEW</div>
             <canvas id="mapCanvas" width="500" height="400"></canvas>
-            <div class="mouse-guide">🖱️ 마우스를 움직여 구조를 돌려보세요</div>
+            <div style="position:absolute; bottom:20px; font-size:0.8rem; color:#444;">Drag to Rotate 360°</div>
         </div>
 
         <div class="right-panel">
-            <h3 style="color:white; margin-bottom: 20px;">🔧 부품 연결 구조</h3>
-            
             <div class="part-list">
-                <div class="part-item" id="part-knuckle">
-                    <span>1. 너클 & 허브</span>
-                    <span style="font-size:0.8rem;">(뼈대)</span>
+                <div class="part-item" onclick="showInfo(1)" id="part-knuckle">
+                    <span class="part-name">1. 너클 & 허브</span>
+                    <span style="font-size:0.8rem; opacity:0.7;">Click info ℹ️</span>
                 </div>
-                <div class="part-item" id="part-disc">
-                    <span>2. 브레이크 디스크</span>
-                    <span style="font-size:0.8rem;">(회전판)</span>
+                <div class="part-item" onclick="showInfo(2)" id="part-disc">
+                    <span class="part-name">2. 브레이크 디스크</span>
+                    <span style="font-size:0.8rem; opacity:0.7;">Click info ℹ️</span>
                 </div>
-                <div class="part-item" id="part-caliper">
+                <div class="part-item" onclick="showInfo(3)" id="part-caliper">
                     <span class="part-name">3. 캘리퍼</span>
-                    <span style="font-size:0.8rem;">(잡는 놈)</span>
+                    <span style="font-size:0.8rem; opacity:0.7;">Click info ℹ️</span>
                 </div>
-                <div class="part-item" id="part-wheel">
-                    <span>4. 휠 & 타이어</span>
-                    <span style="font-size:0.8rem;">(껍데기)</span>
+                <div class="part-item" onclick="showInfo(4)" id="part-wheel">
+                    <span class="part-name">4. 휠 & 타이어</span>
+                    <span style="font-size:0.8rem; opacity:0.7;">Click info ℹ️</span>
                 </div>
             </div>
 
             <div class="controls-box">
-                <div style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">🛠️ 분해 / 조립 (Assembly Slider)</div>
+                <div style="color:#888; font-size:0.85rem; letter-spacing:1px; margin-bottom:10px;">ASSEMBLY SLIDER</div>
                 <input type="range" id="explodeRange" min="0" max="100" step="1" value="0">
-                <div id="statusText" style="color:var(--brand-gold); font-weight:bold; margin-top:10px; font-size: 1rem;">조립 완료 (Ready)</div>
+                <div id="statusText" style="color:var(--brand-gold); font-weight:bold; margin-top:5px;">조립 완료 (Ready)</div>
             </div>
             
-            <a href="../index.html" class="nav-back">← 목차로</a>
+            <a href="../index.html" class="nav-back">MENU</a>
         </div>
     </div>
 
     <script>
+        // [데이터] 부품 정보 DB (선생님 컨펌 완료 내용)
+        const partsData = {
+            1: {
+                title: "너클 & 허브 (Knuckle & Hub)",
+                eng: "서스펜션과 바퀴를 연결하는 구조물. 내부에 '베어링'이 있어 차량의 하중을 지지하면서도 바퀴의 회전이 가능하도록 함.",
+                vibe: "\"손목 관절과 뼈대\"\n자동차가 바퀴를 놓치지 않게 꽉 잡고 있는 주먹입니다. 안에는 매끄러운 구슬(베어링)이 들어 있어서, 꽉 잡은 채로도 바퀴가 빙그르르 돌 수 있게 해줍니다."
+            },
+            2: {
+                title: "브레이크 디스크 (Brake Disc)",
+                eng: "바퀴와 함께 회전하는 주철 원판. 캘리퍼의 패드와 마찰하여 운동에너지를 열에너지로 변환, 소멸시킴.",
+                vibe: "\"회전하는 뜨거운 접시\"\n바퀴랑 같이 미친 듯이 도는 쇠판입니다. 우리가 달리기를 멈추고 싶을 때 꽉 붙잡아야 하는 '타겟'이 바로 이 녀석입니다."
+            },
+            3: {
+                title: "캘리퍼 (Caliper)",
+                eng: "유압을 이용해 브레이크 패드를 디스크 양면에 밀착시켜 제동력을 발생시키는 장치.",
+                vibe: "\"악어의 입 (집게)\"\n브레이크를 밟으면 유압의 힘으로 회전하는 접시(디스크)를 양쪽에서 '꽉!' 물어버리는 강력한 집게입니다."
+            },
+            4: {
+                title: "휠 & 타이어 (Wheel & Tire)",
+                eng: "구동력과 제동력을 지면에 전달하는 최종 부품. 휠은 타이어를 지지하며 강성을, 타이어는 노면 마찰력(Grip)을 담당함.",
+                vibe: "\"자동차의 신발\"\n엔진 힘이 아무리 좋아도 신발이 미끄러우면 꽝이죠. 멋(휠)과 접지력(타이어)을 담당하며 땅을 박차고 나가는 부품입니다."
+            }
+        };
+
+        // [모달 기능]
+        const modal = document.getElementById('info-modal');
+        function showInfo(id) {
+            const data = partsData[id];
+            document.getElementById('m-title').innerText = data.title;
+            document.getElementById('m-desc-eng').innerText = data.eng;
+            document.getElementById('m-desc-vibe').innerText = data.vibe;
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+        function closeModal(e) {
+            if (e.target === modal) closeModalBtn();
+        }
+        function closeModalBtn() {
+            modal.classList.remove('show');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        // [3D 캔버스 엔진]
         const canvas = document.getElementById('mapCanvas');
         const ctx = canvas.getContext('2d');
         const explodeRange = document.getElementById('explodeRange');
         const statusText = document.getElementById('statusText');
         const mapContainer = document.getElementById('map-container');
 
-        // 마우스 컨트롤 변수
         let mouseX = 0;
-        let targetAngle = 0.5; // 약간 측면에서 시작
+        let targetAngle = 0.5; 
         let currentAngle = 0.5;
 
         mapContainer.addEventListener('mousemove', (e) => {
             const rect = mapContainer.getBoundingClientRect();
-            // 마우스 위치를 -1 ~ 1 사이 값으로 변환
             mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1; 
         });
 
-        // 3D 투영 함수
         function project3D(x, y, z, angle) {
             const scale = 120; 
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
-            
-            // Y축 회전
-            const rad = angle * 1.5; // 회전 범위
+            const rad = angle * 1.2; 
             const rx = x * Math.cos(rad) - z * Math.sin(rad);
             const rz = x * Math.sin(rad) + z * Math.cos(rad);
-            
-            // 원근감
             const depth = 500 / (500 - rz * 100); 
-            
-            return {
-                x: cx + rx * scale * depth,
-                y: cy + y * scale * depth,
-                scale: depth,
-                zIndex: rz // 그리기 순서 정할 때 사용
-            };
+            return { x: cx + rx * scale * depth, y: cy + y * scale * depth, scale: depth, zIndex: rz };
         }
 
-        // 원기둥(디스크/휠) 그리기 함수
-        function drawCylinder(x, y, z, radius, width, color, angle, gap) {
-            const steps = 20;
-            const points = [];
+        // [고퀄리티 드로잉 함수들] - 그라데이션과 그림자 적용
+
+        function drawKnuckle(p) {
+            // 주철 질감 (어두운 회색 그라데이션)
+            const grad = ctx.createLinearGradient(p.x - 20, p.y - 60, p.x + 20, p.y + 60);
+            grad.addColorStop(0, "#333");
+            grad.addColorStop(0.5, "#555");
+            grad.addColorStop(1, "#222");
             
-            // 앞면, 뒷면 원 좌표 계산
-            for (let i = 0; i < steps; i++) {
-                const theta = (i / steps) * Math.PI * 2;
-                const px = Math.cos(theta) * radius; // 원형
-                const py = Math.sin(theta) * radius;
-                
-                // x, y, z 좌표계에서 옆으로 누운 원통 (X축이 두께)
-                // gap: 분해될 때 X축으로 벌어짐
-                points.push({ x: gap + width/2, y: px, z: py }); // 앞면
-                points.push({ x: gap - width/2, y: px, z: py }); // 뒷면
+            ctx.fillStyle = grad;
+            // 둥근 사각형 느낌으로 뼈대 그리기
+            ctx.beginPath(); ctx.roundRect(p.x - 25*p.scale, p.y - 70*p.scale, 50*p.scale, 140*p.scale, 10); ctx.fill();
+            
+            // 허브 베어링 (가운데 빛나는 부분)
+            const bearingGrad = ctx.createRadialGradient(p.x, p.y, 5*p.scale, p.x, p.y, 35*p.scale);
+            bearingGrad.addColorStop(0, "#fff");
+            bearingGrad.addColorStop(0.2, "#888");
+            bearingGrad.addColorStop(1, "#111");
+            
+            ctx.fillStyle = bearingGrad;
+            ctx.beginPath(); ctx.arc(p.x, p.y, 35 * p.scale, 0, Math.PI*2); ctx.fill();
+            
+            // 볼트 구멍 (디테일)
+            ctx.fillStyle = "#000";
+            for(let i=0; i<5; i++) {
+                const ang = (i/5)*Math.PI*2;
+                ctx.beginPath(); ctx.arc(p.x + Math.cos(ang)*20*p.scale, p.y + Math.sin(ang)*20*p.scale, 3*p.scale, 0, Math.PI*2); ctx.fill();
             }
-            
-            // 투영 후 그리기
-            ctx.fillStyle = color;
-            ctx.strokeStyle = "rgba(255,255,255,0.2)";
-            
-            // 덩어리로 그리기 (간단화)
-            const center = project3D(gap, y, z, angle);
-            
-            // 약간의 3D 느낌을 위한 타원
-            ctx.beginPath();
-            ctx.ellipse(center.x, center.y, width * 50 * center.scale, radius * 120 * center.scale, 0, 0, Math.PI*2);
-            ctx.fill();
-            ctx.stroke();
         }
 
-        // [핵심] 조립 구조 그리기
+        function drawDisc(p) {
+            // 금속 원판 (은색 그라데이션)
+            const grad = ctx.createLinearGradient(p.x, p.y - 70*p.scale, p.x, p.y + 70*p.scale);
+            grad.addColorStop(0, "#999");
+            grad.addColorStop(0.2, "#fff"); // 광택
+            grad.addColorStop(0.5, "#bbb");
+            grad.addColorStop(0.8, "#fff"); // 광택
+            grad.addColorStop(1, "#888");
+
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.ellipse(p.x, p.y, 12 * p.scale, 75 * p.scale, 0, 0, Math.PI*2); ctx.fill();
+            
+            // 측면 두께 (입체감)
+            ctx.strokeStyle = "#666"; ctx.lineWidth = 1; ctx.stroke();
+
+            // 타공 디스크 표현 (작은 점들)
+            ctx.fillStyle = "#333";
+            for(let i=0; i<8; i++) {
+                const yPos = (i - 4) * 15 * p.scale;
+                ctx.beginPath(); ctx.ellipse(p.x, p.y + yPos, 2*p.scale, 4*p.scale, 0, 0, Math.PI*2); ctx.fill();
+            }
+        }
+
+        function drawCaliper(p) {
+            // 브렘보 스타일 레드 + 입체감
+            const grad = ctx.createLinearGradient(p.x - 20, p.y - 40, p.x + 20, p.y + 40);
+            grad.addColorStop(0, "#a00");
+            grad.addColorStop(0.3, "#ff4444"); // 하이라이트
+            grad.addColorStop(1, "#800");
+
+            ctx.fillStyle = grad;
+            // 캘리퍼 모양 (약간 둥근)
+            ctx.beginPath(); 
+            ctx.roundRect(p.x - 18*p.scale, p.y - 40*p.scale, 45 * p.scale, 80 * p.scale, 8); 
+            ctx.fill();
+            
+            // 로고 텍스트
+            ctx.fillStyle = "#fff"; ctx.font = `bold ${10*p.scale}px sans-serif`; 
+            ctx.save();
+            ctx.translate(p.x, p.y); ctx.rotate(Math.PI/2);
+            ctx.fillText("DREAM-FI", -25*p.scale, 5*p.scale);
+            ctx.restore();
+        }
+
+        function drawWheel(p) {
+            // 1. 타이어 (고무 질감 - 짙은 회색)
+            const tireGrad = ctx.createLinearGradient(p.x, p.y - 90*p.scale, p.x, p.y + 90*p.scale);
+            tireGrad.addColorStop(0, "#111");
+            tireGrad.addColorStop(0.2, "#333");
+            tireGrad.addColorStop(0.5, "#222");
+            tireGrad.addColorStop(0.8, "#333");
+            tireGrad.addColorStop(1, "#111");
+
+            ctx.fillStyle = tireGrad;
+            ctx.beginPath(); ctx.ellipse(p.x, p.y, 30 * p.scale, 95 * p.scale, 0, 0, Math.PI*2); ctx.fill();
+
+            // 타이어 트레드 (패턴)
+            ctx.strokeStyle = "#000"; ctx.lineWidth = 2;
+            for(let i=0; i<10; i++) {
+                const yPos = (i-5) * 15 * p.scale;
+                ctx.beginPath(); ctx.moveTo(p.x - 20*p.scale, p.y + yPos); ctx.lineTo(p.x + 20*p.scale, p.y + yPos); ctx.stroke();
+            }
+
+            // 2. 휠 (알루미늄 림)
+            const rimGrad = ctx.createRadialGradient(p.x, p.y, 10*p.scale, p.x, p.y, 50*p.scale);
+            rimGrad.addColorStop(0, "#333");
+            rimGrad.addColorStop(0.5, "#888"); // 스포크
+            rimGrad.addColorStop(1, "#111");
+
+            ctx.fillStyle = rimGrad;
+            ctx.beginPath(); ctx.ellipse(p.x, p.y, 18 * p.scale, 55 * p.scale, 0, 0, Math.PI*2); ctx.fill();
+            
+            // 림 테두리
+            ctx.strokeStyle = "#aaa"; ctx.lineWidth = 2; ctx.stroke();
+        }
+
         function drawAssembly() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // 회전 부드럽게
-            targetAngle = mouseX;
-            currentAngle += (targetAngle - currentAngle) * 0.1;
+            targetAngle = mouseX; currentAngle += (targetAngle - currentAngle) * 0.1;
+            const explode = parseInt(explodeRange.value);
 
-            const explode = parseInt(explodeRange.value); // 0 ~ 100
-            
-            // 분해 거리 계산 (X축으로 벌어짐)
-            const gap1 = 0;                     // 너클 (고정)
-            const gap2 = explode * 0.015;       // 디스크
-            const gap3 = explode * 0.015;       // 캘리퍼 (디스크 위에 붙음)
-            const gap4 = explode * 0.04;        // 휠 (가장 멀리)
+            // 분해 좌표 계산
+            const gap2 = explode * 0.015;
+            const gap3 = explode * 0.015;
+            const gap4 = explode * 0.045;
 
-            // 텍스트 업데이트
-            if(explode < 10) statusText.innerText = "조립 완료 (Ready)";
-            else if(explode < 50) statusText.innerText = "캘리퍼 분리 중...";
-            else statusText.innerText = "완전 분해 (Exploded)";
+            // 상태 텍스트
+            if(explode < 10) statusText.innerText = "조립 완료 (Assembled)";
+            else if(explode < 90) statusText.innerText = "분해 중... (Exploding)";
+            else statusText.innerText = "완전 분해 (Full Exploded)";
 
-            // 부품 하이라이트
+            // 활성화 효과
             document.querySelectorAll('.part-item').forEach(el => el.classList.remove('active'));
             if(explode < 20) document.getElementById('part-wheel').classList.add('active');
             else if(explode < 50) document.getElementById('part-caliper').classList.add('active');
             else if(explode < 80) document.getElementById('part-disc').classList.add('active');
             else document.getElementById('part-knuckle').classList.add('active');
 
-            // [그리기 순서] 안쪽 -> 바깥쪽 (Z-index 정렬은 복잡하니 단순화)
-            // 실제로는 각도에 따라 그리는 순서를 바꿔야 하지만, 
-            // 여기서는 "분해되었을 때 잘 보이는 것"에 집중
-            
-            // 1. 너클 & 허브 (가장 안쪽, 뼈대)
+            // [드로잉 파이프라인]
+            // 투영 좌표 미리 계산
             const pKnuckle = project3D(-0.5, 0, 0, currentAngle);
-            ctx.fillStyle = "#555";
-            ctx.fillRect(pKnuckle.x - 20, pKnuckle.y - 60, 40, 120); // 서스펜션 기둥
-            ctx.fillStyle = "#777";
-            ctx.beginPath(); ctx.arc(pKnuckle.x, pKnuckle.y, 30 * pKnuckle.scale, 0, Math.PI*2); ctx.fill(); // 허브
-            ctx.fillStyle = "#fff"; ctx.font = "12px sans-serif"; ctx.fillText("1. Knuckle", pKnuckle.x - 20, pKnuckle.y - 70);
-
-            // 2. 브레이크 디스크 (허브에 끼워짐)
             const pDisc = project3D(gap2, 0, 0, currentAngle);
-            ctx.fillStyle = "#ccc"; // 은색 디스크
-            ctx.beginPath();
-            // 옆에서 본 얇은 원판 느낌
-            ctx.ellipse(pDisc.x, pDisc.y, 10 * pDisc.scale, 70 * pDisc.scale, 0, 0, Math.PI*2);
-            ctx.fill();
-            ctx.strokeStyle = "#fff"; ctx.stroke();
-            if(explode > 20) { ctx.fillStyle = "#brand-gold"; ctx.fillText("2. Disc", pDisc.x, pDisc.y - 80); }
-
-            // 3. 캘리퍼 (디스크를 감쌈)
-            const pCaliper = project3D(gap3, -0.6, -0.4, currentAngle); // 위치 살짝 위쪽
-            ctx.fillStyle = "#ff4444"; // 빨간색
-            ctx.beginPath();
-            ctx.roundRect(pCaliper.x - 15, pCaliper.y - 30, 40 * pCaliper.scale, 60 * pCaliper.scale, 5);
-            ctx.fill();
-            if(explode > 20) ctx.fillText("3. Caliper", pCaliper.x, pCaliper.y - 40);
-
-            // 4. 휠 & 타이어 (가장 바깥쪽)
+            const pCaliper = project3D(gap3, -0.6, -0.3, currentAngle);
             const pWheel = project3D(0.3 + gap4, 0, 0, currentAngle);
-            
-            // 타이어 (검은색)
-            ctx.fillStyle = "#222";
-            ctx.beginPath();
-            ctx.ellipse(pWheel.x, pWheel.y, 25 * pWheel.scale, 85 * pWheel.scale, 0, 0, Math.PI*2);
-            ctx.fill();
-            
-            // 휠 (회색)
-            ctx.fillStyle = "#444";
-            ctx.beginPath();
-            ctx.ellipse(pWheel.x, pWheel.y, 15 * pWheel.scale, 50 * pWheel.scale, 0, 0, Math.PI*2);
-            ctx.fill();
 
-            if(explode < 10) {
-                ctx.fillStyle = "#fff"; 
-                ctx.fillText("Assembled", pWheel.x - 20, pWheel.y + 100);
-            } else {
-                ctx.fillStyle = "#fff";
-                ctx.fillText("4. Wheel", pWheel.x, pWheel.y + 100);
-            }
+            // 그림자 (바닥)
+            ctx.fillStyle = "rgba(0,0,0,0.5)";
+            ctx.beginPath(); ctx.ellipse(canvas.width/2, canvas.height/2 + 150, 200, 20, 0, 0, Math.PI*2); ctx.fill();
 
-            // 연결선 (분해되었을 때 어디로 조립되는지 보여줌)
+            // 순서대로 그리기 (z-index 처리 없이 단순화된 레이어 순서: 안->밖)
+            drawKnuckle(pKnuckle);
+            drawDisc(pDisc);
+            drawCaliper(pCaliper);
+            drawWheel(pWheel);
+
+            // 연결선 (가이드)
             if(explode > 10) {
-                ctx.strokeStyle = "rgba(255, 204, 0, 0.5)";
-                ctx.lineWidth = 1;
-                ctx.setLineDash([5, 5]);
-                ctx.beginPath();
-                ctx.moveTo(pKnuckle.x, pKnuckle.y);
-                ctx.lineTo(pWheel.x, pWheel.y);
-                ctx.stroke();
+                ctx.strokeStyle = "rgba(255, 204, 0, 0.4)";
+                ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+                ctx.beginPath(); ctx.moveTo(pKnuckle.x, pKnuckle.y); ctx.lineTo(pWheel.x, pWheel.y); ctx.stroke();
                 ctx.setLineDash([]);
             }
 
             requestAnimationFrame(drawAssembly);
         }
         drawAssembly();
-
     </script>
 </body>
 </html>
