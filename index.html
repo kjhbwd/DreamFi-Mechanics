@@ -5,33 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dream-Fi: 무의식의 연금술</title>
     <style>
-        /* [전역 스타일] 드림파이 시그니처 */
+        /* [전역 스타일] */
         :root { --brand-gold: #ffcc00; --bg-dark: #121212; --card-bg: #1e1e1e; }
+        
         body { 
             background: var(--bg-dark); 
             color: white; 
             font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
+            
+            /* [수정] 화면 고정을 풀고, 스크롤 가능하게 변경 */
+            min-height: 100vh; 
+            margin: 0;
+            overflow-y: auto; /* 세로 스크롤 허용 */
+            
+            /* 내용 중앙 정렬을 위한 Flex 설정 */
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            justify-content: center; 
-            min-height: 100vh; 
-            margin: 0; 
-            overflow: hidden; 
+            /* justify-content: center; -> 내용이 길어지면 위가 잘릴 수 있어서 제거 */
+            padding: 40px 0; /* 위아래 여백 확보 */
         }
 
-        /* [백서 팝업 스타일] - 처음 진입 시 등장 */
+        /* [백서 팝업 스타일] */
         #whitepaper-modal { 
             display: flex; 
             position: fixed; 
             top: 0; left: 0; 
             width: 100%; height: 100%; 
             background: rgba(0, 0, 0, 0.85); 
-            backdrop-filter: blur(8px); /* 고급 블러 처리 */
+            backdrop-filter: blur(8px); 
             z-index: 9999; 
             justify-content: center; 
             align-items: center; 
             animation: fadeIn 0.6s forwards; 
+            
+            /* 팝업도 내용이 길면 스크롤 되도록 */
+            overflow-y: auto;
         }
 
         .wp-content { 
@@ -41,7 +50,10 @@
             padding: 40px 30px; border-radius: 20px; 
             text-align: center; 
             box-shadow: 0 20px 60px rgba(0,0,0,0.6); 
-            transform: translateY(30px);
+            
+            /* 팝업 위치 조정 */
+            margin: auto; 
+            position: relative;
             animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
@@ -69,22 +81,18 @@
         @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         /* [메인 목차 UI] */
-        .brand-header { text-align: center; margin-bottom: 30px; position: relative; z-index: 1; }
+        .brand-header { text-align: center; margin-bottom: 40px; margin-top: 20px; }
         .brand-tag { color: var(--brand-gold); font-size: 0.85rem; font-weight: bold; letter-spacing: 4px; margin-bottom: 10px; }
         .main-title { margin: 0; font-size: 2.6rem; letter-spacing: -1.5px; color: #fff; text-shadow: 0 0 20px rgba(0,0,0,0.5); }
         
-        /* 스크롤 가능한 메뉴 영역 */
+        /* [수정] 컨테이너 높이 제한 제거 -> 전체 페이지 스크롤 사용 */
         .container { 
             width: 90%; max-width: 420px; 
-            max-height: 60vh; /* 화면이 작을 때 스크롤 생김 */
-            overflow-y: auto; 
+            /* max-height 제거 */
             padding: 10px; 
-            position: relative; z-index: 1;
         }
-        .container::-webkit-scrollbar { width: 4px; }
-        .container::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
         
-        .link-box { margin-bottom: 20px; position: relative; }
+        .link-box { margin-bottom: 25px; position: relative; }
         a { 
             display: block; background: var(--card-bg); color: #fff; text-decoration: none; 
             border: 1px solid #333; padding: 24px; border-radius: 18px; text-align: center; 
@@ -105,7 +113,7 @@
         }
         .desc-text { display: block; font-size: 0.85rem; font-weight: normal; color: #888; margin-top: 8px; }
         
-        .footer-note { text-align: center; color: #444; margin-top: 20px; font-size: 0.85rem; border-top: 1px solid #222; padding-top: 20px; width: 100%; }
+        .footer-note { text-align: center; color: #444; margin-top: 40px; font-size: 0.85rem; border-top: 1px solid #222; padding-top: 20px; width: 100%; max-width: 420px; }
     </style>
 </head>
 <body>
@@ -177,7 +185,7 @@
             modal.style.opacity = '0';
             setTimeout(() => {
                 modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
+                /* 스크롤 복구는 CSS에서 처리하므로 body overflow 변경 불필요 */
             }, 500);
         }
     </script>
