@@ -17,7 +17,7 @@
         .main-container { display: flex; flex: 1; height: calc(100vh - 60px); }
 
         /* [왼쪽] 3D 인터랙티브 맵 */
-        .left-panel { flex: 1; background: radial-gradient(circle at center, #333, #000); border-right: 1px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; cursor: grab; }
+        .left-panel { flex: 1; background: radial-gradient(circle at center, #222, #000); border-right: 1px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; cursor: grab; }
         .left-panel:active { cursor: grabbing; }
         .panel-label { position: absolute; top: 20px; left: 20px; color: #aaa; font-size: 0.8rem; font-weight: bold; border: 1px solid #555; padding: 5px 10px; border-radius: 5px; pointer-events: none; background: rgba(0,0,0,0.5); }
         .mouse-guide { position: absolute; bottom: 20px; color: #888; font-size: 0.8rem; animation: blink 2s infinite; pointer-events: none; }
@@ -90,7 +90,7 @@
 
     <div class="main-container">
         <div class="left-panel" id="map-container">
-            <div class="panel-label">📍 3D CHASSIS VIEW</div>
+            <div class="panel-label">📍 3D CHASSIS VIEW (Cyberpunk Style)</div>
             <canvas id="mapCanvas" width="400" height="300"></canvas>
             <div class="mouse-guide">🖱️ 마우스를 움직여 차를 돌려보세요</div>
         </div>
@@ -123,7 +123,7 @@
 
     <script>
         /* ============================
-           [Part 1] 3D 인터랙티브 맵 엔진 (수정완료: 크기 확대!)
+           [Part 1] 3D 인터랙티브 맵 엔진 (대폭 업그레이드!)
            ============================ */
         const mapContainer = document.getElementById('map-container');
         const mapCanvas = document.getElementById('mapCanvas');
@@ -133,91 +133,98 @@
         let targetAngle = 0;
         let currentAngle = 0; 
 
-        // 마우스 감지
         mapContainer.addEventListener('mousemove', (e) => {
             const rect = mapContainer.getBoundingClientRect();
-            // -1 ~ 1 사이 값으로 정규화
             mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1; 
         });
 
-        // 3D 투영 함수 (버그 수정: 스케일 적용!)
         function project3D(x, y, z, angle) {
-            const scale = 150; // [중요] 자동차 크기 150배 확대!
+            const scale = 140; // 크기 조절
             const cx = mapCanvas.width / 2;
             const cy = mapCanvas.height / 2;
-            
-            // Y축 회전 행렬
-            const rad = angle * 0.8; 
+            const rad = angle * 0.7; 
             const rx = x * Math.cos(rad) - z * Math.sin(rad);
             const rz = x * Math.sin(rad) + z * Math.cos(rad);
+            const depth = 500 / (500 - rz * 100); 
+            return { x: cx + rx * scale, y: cy + y * scale, scale: depth };
+        }
+
+        // 다각형 그리기 도우미 함수
+        function drawPoly(points, color, glow) {
+            mapCtx.beginPath();
+            mapCtx.moveTo(points[0].x, points[0].y);
+            for(let i=1; i<points.length; i++) mapCtx.lineTo(points[i].x, points[i].y);
+            mapCtx.closePath();
             
-            // 원근법 (Perspective)
-            const depth = 500 / (500 - rz * 100); // 원근감 완화
-            
-            return {
-                x: cx + rx * scale, // 여기서 스케일을 곱해줍니다
-                y: cy + y * scale,  // 여기도 곱해줍니다
-                scale: depth        // 거리감
-            };
+            mapCtx.fillStyle = color;
+            if(glow) { mapCtx.shadowBlur = 10; mapCtx.shadowColor = glow; }
+            mapCtx.fill();
+            mapCtx.shadowBlur = 0;
+
+            mapCtx.strokeStyle = "#555"; mapCtx.lineWidth = 1; mapCtx.stroke();
         }
 
         function draw3DMap() {
             mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
-            
-            // 부드러운 회전
-            targetAngle = mouseX;
-            currentAngle += (targetAngle - currentAngle) * 0.1;
+            targetAngle = mouseX; currentAngle += (targetAngle - currentAngle) * 0.1;
 
             const brakePower = parseInt(document.getElementById('brakeRange').value);
             const isBraking = brakePower > 5;
-            const dive = isBraking ? (brakePower / 100) * 0.1 : 0;
+            const dive = isBraking ? (brakePower / 100) * 0.08 : 0;
 
-            // 3D 좌표 (단위: 미터 느낌으로 작게 잡고 project3D에서 150배 키움)
-            const wheels = [
-                {x: -0.7, y: 0.3, z: -0.9}, {x: 0.7, y: 0.3, z: -0.9}, // 뒤
-                {x: -0.7, y: 0.3 + dive, z: 0.9}, {x: 0.7, y: 0.3 + dive, z: 0.9} // 앞
+            // [3D 모델 데이터 - 박스형 차체]
+            // 바닥면 (Lower Deck)
+            const bodyLow = [
+                {x: -0.8, y: 0.2+dive, z: -1.5}, {x: 0.8, y: 0.2+dive, z: -1.5}, // 뒤
+                {x: 0.8, y: 0.2+dive, z: 1.5}, {x: -0.8, y: 0.2+dive, z: 1.5}    // 앞
+            ];
+            // 지붕면 (Upper Deck - Cabin)
+            const bodyHigh = [
+                {x: -0.6, y: -0.2+dive, z: -0.5}, {x: 0.6, y: -0.2+dive, z: -0.5},
+                {x: 0.6, y: -0.2+dive, z: 0.8}, {x: -0.6, y: -0.2+dive, z: 0.8}
             ];
 
-            const chassis = [
-                {x: -0.5, y: 0.1, z: -1.2}, {x: 0.5, y: 0.1, z: -1.2}, 
-                {x: 0.5, y: 0.1 + dive, z: 1.2}, {x: -0.5, y: 0.1 + dive, z: 1.2}, 
-            ];
+            // 투영(Projection)
+            const pLow = bodyLow.map(p => project3D(p.x, p.y, p.z, currentAngle));
+            const pHigh = bodyHigh.map(p => project3D(p.x, p.y, p.z, currentAngle));
 
-            // 1. 섀시 그리기 (밝은 회색으로 변경)
-            mapCtx.strokeStyle = "#888"; mapCtx.lineWidth = 3;
-            mapCtx.beginPath();
-            const p0 = project3D(chassis[0].x, chassis[0].y, chassis[0].z, currentAngle);
-            mapCtx.moveTo(p0.x, p0.y);
-            for(let i=1; i<chassis.length; i++) {
-                const p = project3D(chassis[i].x, chassis[i].y, chassis[i].z, currentAngle);
-                mapCtx.lineTo(p.x, p.y);
-            }
-            mapCtx.lineTo(p0.x, p0.y); 
-            mapCtx.stroke();
+            // [그리기 순서: 뒤 -> 앞]
+            
+            // 1. 차체 바닥 (반투명 와이어프레임)
+            drawPoly(pLow, "rgba(50, 50, 50, 0.3)");
 
             // 2. 바퀴 그리기
+             const wheels = [
+                {x: -0.8, y: 0.3+dive, z: -1.2}, {x: 0.8, y: 0.3+dive, z: -1.2}, // 뒤
+                {x: -0.8, y: 0.3+dive, z: 1.2}, {x: 0.8, y: 0.3+dive, z: 1.2}    // 앞
+            ];
             wheels.forEach((w) => {
                 const p = project3D(w.x, w.y, w.z, currentAngle);
-                
-                // 그림자
-                mapCtx.fillStyle = "rgba(0,0,0,0.5)";
-                mapCtx.beginPath(); mapCtx.ellipse(p.x, p.y + 15, 20 * p.scale, 8 * p.scale, 0, 0, Math.PI*2); mapCtx.fill();
-
                 // 타이어
-                mapCtx.fillStyle = "#444";
-                mapCtx.beginPath(); mapCtx.ellipse(p.x, p.y, 12 * p.scale, 28 * p.scale, currentAngle * 0.2, 0, Math.PI*2); mapCtx.fill();
-
-                // 브레이크 디스크 (안쪽에서 붉게 빛남)
-                if(isBraking) {
-                    mapCtx.fillStyle = `rgba(255, 68, 68, ${brakePower/100})`;
-                    mapCtx.shadowBlur = 20; mapCtx.shadowColor = "#ff0000";
-                    mapCtx.beginPath(); mapCtx.ellipse(p.x, p.y, 6 * p.scale, 20 * p.scale, currentAngle * 0.2, 0, Math.PI*2); mapCtx.fill();
-                    mapCtx.shadowBlur = 0;
-                }
+                mapCtx.fillStyle = "#222"; mapCtx.beginPath(); mapCtx.ellipse(p.x, p.y, 12 * p.scale, 28 * p.scale, currentAngle * 0.2, 0, Math.PI*2); mapCtx.fill();
+                // 휠/디스크
+                mapCtx.fillStyle = isBraking ? `rgba(255, 68, 68, ${brakePower/100})` : "#444";
+                if(isBraking) { mapCtx.shadowBlur = 20; mapCtx.shadowColor = "#ff0000"; }
+                mapCtx.beginPath(); mapCtx.ellipse(p.x, p.y, 7 * p.scale, 18 * p.scale, currentAngle * 0.2, 0, Math.PI*2); mapCtx.fill();
+                mapCtx.shadowBlur = 0;
             });
 
-            // 3. 텍스트
-            const frontLabel = project3D(0, -0.2 + dive, 1.4, currentAngle);
+            // 3. 차체 캐빈(지붕) 및 기둥
+            drawPoly(pHigh, "rgba(80, 80, 80, 0.4)", "#fff"); // 지붕은 약간 빛나게
+            
+            // 기둥 연결 (와이어프레임 느낌)
+            mapCtx.strokeStyle = "rgba(100,100,255,0.3)"; mapCtx.lineWidth = 2;
+            mapCtx.beginPath();
+            // 앞유리쪽 기둥
+            mapCtx.moveTo(pLow[2].x, pLow[2].y); mapCtx.lineTo(pHigh[2].x, pHigh[2].y);
+            mapCtx.moveTo(pLow[3].x, pLow[3].y); mapCtx.lineTo(pHigh[3].x, pHigh[3].y);
+            // 뒷유리쪽 기둥
+            mapCtx.moveTo(pLow[0].x, pLow[0].y); mapCtx.lineTo(pHigh[0].x, pHigh[0].y);
+            mapCtx.moveTo(pLow[1].x, pLow[1].y); mapCtx.lineTo(pHigh[1].x, pHigh[1].y);
+            mapCtx.stroke();
+
+            // 4. 텍스트
+            const frontLabel = project3D(0, -0.3+dive, 1.6, currentAngle);
             mapCtx.fillStyle = "#fff"; mapCtx.font = "bold 12px sans-serif"; mapCtx.textAlign = "center";
             mapCtx.fillText("FRONT", frontLabel.x, frontLabel.y);
 
@@ -226,7 +233,7 @@
         draw3DMap();
 
         /* ============================
-           [Part 2] 오른쪽 정밀 시뮬레이터
+           [Part 2] 오른쪽 정밀 시뮬레이터 (동일)
            ============================ */
         const brakeRange = document.getElementById('brakeRange');
         const brakeText = document.getElementById('brakeText');
@@ -235,9 +242,7 @@
         const canvas = document.getElementById('brakeCanvas');
         const ctx = canvas.getContext('2d');
 
-        let simSpeed = 100;
-        let simHeat = 0;
-        let simAngle = 0;
+        let simSpeed = 100; let simHeat = 0; let simAngle = 0;
 
         function drawSim() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -245,54 +250,33 @@
             const brakeInput = parseInt(brakeRange.value);
 
             if (brakeInput > 0) {
-                simSpeed -= (brakeInput * 0.05);
-                simHeat += (brakeInput * 0.15) * (simSpeed/50);
-                if(simSpeed < 0) simSpeed = 0;
-                if(simHeat > 100) simHeat = 100;
-                brakeText.innerHTML = "제동 중! (마찰 발생) 🔥";
-                brakeText.style.color = "#ff4444";
+                simSpeed -= (brakeInput * 0.05); simHeat += (brakeInput * 0.15) * (simSpeed/50);
+                if(simSpeed < 0) simSpeed = 0; if(simHeat > 100) simHeat = 100;
+                brakeText.innerHTML = "제동 중! (마찰 발생) 🔥"; brakeText.style.color = "#ff4444";
             } else {
-                simSpeed += 0.8; 
-                simHeat -= 0.5;
-                if(simSpeed > 100) simSpeed = 100;
-                if(simHeat < 0) simHeat = 0;
-                brakeText.innerHTML = "주행 중... (자동 가속) 🚗";
-                brakeText.style.color = "#00ff64";
+                simSpeed += 0.8; simHeat -= 0.5;
+                if(simSpeed > 100) simSpeed = 100; if(simHeat < 0) simHeat = 0;
+                brakeText.innerHTML = "주행 중... (자동 가속) 🚗"; brakeText.style.color = "#00ff64";
             }
 
             simAngle += simSpeed * 0.2;
-
             speedVal.innerText = Math.round(simSpeed);
             heatVal.innerText = Math.round(25 + (simHeat * 6)) + "°C";
 
-            ctx.save();
-            ctx.translate(cx, cy);
-            ctx.rotate(simAngle * Math.PI / 180);
-
-            const r = Math.min(255, 100 + simHeat * 2.5);
-            const gb = Math.max(50, 100 - simHeat);
+            ctx.save(); ctx.translate(cx, cy); ctx.rotate(simAngle * Math.PI / 180);
+            const r = Math.min(255, 100 + simHeat * 2.5); const gb = Math.max(50, 100 - simHeat);
             const grad = ctx.createRadialGradient(0,0,20, 0,0,80);
-            grad.addColorStop(0, `rgb(${r},${gb},${gb})`);
-            grad.addColorStop(0.5, "#666"); 
-            grad.addColorStop(0.9, `rgb(${r},${gb},${gb})`);
-
+            grad.addColorStop(0, `rgb(${r},${gb},${gb})`); grad.addColorStop(0.5, "#666"); grad.addColorStop(0.9, `rgb(${r},${gb},${gb})`);
             if(simHeat > 15) { ctx.shadowBlur = simHeat * 0.6; ctx.shadowColor = "#ff4444"; }
-            ctx.fillStyle = grad;
-            ctx.beginPath(); ctx.arc(0, 0, 80, 0, Math.PI*2); ctx.fill();
-            
-            ctx.fillStyle = "#1a1a1a";
-            for(let i=0; i<8; i++) { ctx.beginPath(); ctx.arc(55, 0, 4, 0, Math.PI*2); ctx.fill(); ctx.rotate(Math.PI/4); }
+            ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(0, 0, 80, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#1a1a1a"; for(let i=0; i<8; i++) { ctx.beginPath(); ctx.arc(55, 0, 4, 0, Math.PI*2); ctx.fill(); ctx.rotate(Math.PI/4); }
             ctx.restore();
 
             ctx.shadowBlur = 0; ctx.fillStyle = "#ff4444";
             const squeeze = brakeInput * 0.05;
             ctx.beginPath(); ctx.roundRect(cx + 45 - squeeze, cy - 50, 50, 100, 8); ctx.fill();
-            
             ctx.fillStyle = "white"; ctx.font = "bold 10px sans-serif";
-            ctx.save(); ctx.translate(cx + 70, cy); ctx.rotate(Math.PI/2);
-            ctx.fillText("DREAM-FI", -20, 0);
-            ctx.restore();
-
+            ctx.save(); ctx.translate(cx + 70, cy); ctx.rotate(Math.PI/2); ctx.fillText("DREAM-FI", -20, 0); ctx.restore();
             requestAnimationFrame(drawSim);
         }
         drawSim();
