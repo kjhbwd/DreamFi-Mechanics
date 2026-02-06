@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -6,243 +5,289 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dream-Fi #05: 현가장치 (Suspension)</title>
     <style>
-        :root { --brand-gold: #ffcc00; --brand-blue: #00ccff; --bg-dark: #0f0f0f; --panel-bg: #1a1a1a; }
-        body { background: var(--bg-dark); color: white; font-family: 'Pretendard', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-
-        header { height: 60px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #333; background: #000; z-index: 10; }
-        .brand-title { color: var(--brand-blue); font-weight: 900; letter-spacing: 1px; font-size: 1.2rem; text-transform: uppercase; }
-
-        .main-container { display: flex; flex: 1; height: calc(100vh - 60px); }
-
-        /* 왼쪽 패널: 조립 작업장 */
-        .left-panel { flex: 1; background: radial-gradient(circle at center, #222 0%, #000 80%); border-right: 1px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        .panel-label { position: absolute; top: 20px; left: 20px; color: #fff; font-size: 0.75rem; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 30px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
-
-        .right-panel { flex: 1; background: var(--panel-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; border-left: 1px solid #222; }
-
-        canvas { max-width: 100%; max-height: 100%; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.9)); }
-
-        .controls-box { width: 85%; text-align: center; margin-top: 30px; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 15px; border: 1px solid #333; }
+        :root { --brand-gold: #ffcc00; --brand-blue: #00ccff; --bg-dark: #0f0f0f; --panel-l: #151515; --panel-c: #050505; --panel-r: #1a1a1a; }
         
-        input[type=range] { width: 100%; -webkit-appearance: none; background: #333; height: 8px; border-radius: 4px; outline: none; margin: 15px 0; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: var(--brand-blue); border-radius: 50%; cursor: pointer; border: 3px solid #fff; box-shadow: 0 0 15px var(--brand-blue); transition: 0.2s; }
-        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        * { box-sizing: border-box; }
 
-        .part-list { width: 85%; text-align: left; margin-bottom: 10px; }
+        body { 
+            background: var(--bg-dark); color: white; font-family: 'Pretendard', sans-serif; 
+            margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; 
+        }
+
+        /* [모바일 최적화: 한글 깨짐 방지 & 스크롤 허용] */
+        @media (max-width: 768px) {
+            body { height: auto; overflow-y: auto; }
+            .main-wrapper { flex-direction: column; height: auto !important; }
+            .panel-left { height: 200px !important; border-bottom: 1px solid #333; }
+            .panel-center { height: 450px !important; border-bottom: 1px solid #333; }
+            .panel-right { height: auto !important; padding-bottom: 50px; }
+            
+            /* 한글 단어 덩어리 유지 (줄바꿈 방지) */
+            h1, h2, h3, p, span, div, button { word-break: keep-all; word-wrap: break-word; }
+            
+            .nav-footer { position: relative !important; margin-top: 20px; }
+        }
+
+        /* 헤더 */
+        header { height: 50px; display: flex; align-items: center; justify-content: center; background: #000; border-bottom: 1px solid #333; flex-shrink: 0; }
+        .brand-title { color: var(--brand-blue); font-weight: 900; letter-spacing: 1px; font-size: 1.1rem; }
+
+        /* [3단 레이아웃 컨테이너] */
+        .main-wrapper { display: flex; flex: 1; height: calc(100vh - 120px); width: 100%; }
+
+        /* 1. 왼쪽: 내비게이터 (25%) */
+        .panel-left { flex: 1.2; background: var(--panel-l); border-right: 1px solid #333; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        /* 2. 중앙: 메인 어셈블리 (45%) */
+        .panel-center { flex: 2.2; background: radial-gradient(circle at center, #222 0%, #000 90%); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+
+        /* 3. 오른쪽: 컨트롤 (30%) */
+        .panel-right { flex: 1.4; background: var(--panel-r); border-left: 1px solid #333; padding: 25px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; }
+
+        /* 공통 라벨 */
+        .panel-badge { position: absolute; top: 15px; left: 15px; font-size: 0.7rem; font-weight: bold; color: #666; border: 1px solid #333; padding: 4px 10px; border-radius: 4px; background: rgba(0,0,0,0.5); letter-spacing: 1px; z-index: 5; }
+
+        /* 캔버스 스타일 */
+        canvas { max-width: 100%; max-height: 100%; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.8)); }
+
+        /* 컨트롤 UI */
+        .part-list { width: 100%; margin-bottom: 20px; }
         .part-item { 
-            display: flex; justify-content: space-between; padding: 15px; 
-            border-bottom: 1px solid #333; font-size: 0.95rem; color: #888; 
-            cursor: pointer; transition: all 0.3s; position: relative;
+            display: flex; justify-content: space-between; padding: 14px; margin-bottom: 8px;
+            background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid #333;
+            cursor: pointer; transition: 0.2s; font-size: 0.9rem;
         }
-        .part-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
-        .part-item.active { color: white; background: linear-gradient(90deg, rgba(0, 204, 255, 0.15), transparent); border-left: 4px solid var(--brand-blue); padding-left: 11px; }
-        
-        /* 팝업창 스타일 (고급형) */
-        #info-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.3s; }
-        #info-modal.show { opacity: 1; }
-        
-        .modal-content { 
-            background: #1a1a1a; border: 1px solid #444; width: 380px; text-align: left; 
-            border-radius: 20px; overflow: hidden; box-shadow: 0 0 60px rgba(0,0,0,0.8);
-            transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        #info-modal.show .modal-content { transform: scale(1); }
+        .part-item:hover { background: rgba(255,255,255,0.08); border-color: #555; }
+        .part-item.active { border-color: var(--brand-blue); background: rgba(0, 204, 255, 0.1); color: var(--brand-blue); font-weight: bold; }
 
-        .modal-header { background: linear-gradient(135deg, #222, #111); padding: 25px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 30px; }
-        .tag-badge { font-size: 0.75rem; font-weight: bold; background: #333; color: #aaa; padding: 5px 10px; border-radius: 6px; margin-bottom: 12px; display: inline-block; }
-        
-        .nav-back { position: absolute; bottom: 20px; right: 20px; color: #555; text-decoration: none; font-size: 0.8rem; transition: 0.3s; }
-        .nav-back:hover { color: var(--brand-blue); }
+        .slider-box { width: 100%; background: #111; padding: 20px; border-radius: 12px; border: 1px solid #333; text-align: center; margin-bottom: 20px; }
+        input[type=range] { width: 100%; margin: 15px 0; accent-color: var(--brand-blue); cursor: pointer; }
+
+        /* [하단 내비게이션 바] */
+        .nav-footer { 
+            height: 70px; background: #000; border-top: 1px solid #333; flex-shrink: 0;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 30px;
+        }
+        .nav-btn { 
+            text-decoration: none; color: #888; font-size: 0.9rem; font-weight: bold; 
+            display: flex; align-items: center; gap: 10px; transition: 0.3s; padding: 10px 20px; border-radius: 8px;
+        }
+        .nav-btn:hover { color: white; background: #222; }
+        .nav-btn.primary { color: var(--brand-gold); border: 1px solid #333; }
+        .nav-btn.primary:hover { background: rgba(255, 204, 0, 0.1); border-color: var(--brand-gold); }
+
+        /* 팝업 모달 */
+        #info-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(5px); opacity: 0; transition: 0.3s; }
+        #info-modal.show { opacity: 1; }
+        .modal-box { width: 90%; max-width: 400px; background: #1a1a1a; border: 1px solid #444; border-radius: 15px; padding: 30px; box-shadow: 0 0 50px rgba(0,0,0,0.8); transform: scale(0.9); transition: 0.3s; }
+        #info-modal.show .modal-box { transform: scale(1); }
     </style>
 </head>
 <body>
 
     <div id="info-modal" onclick="closeModal(event)">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span id="m-title" style="font-size:1.3rem; font-weight:900; color:white; letter-spacing:-0.5px;">TITLE</span>
-                <button onclick="closeModalBtn()" style="background:none; border:none; color:#666; font-size:1.8rem; cursor:pointer;">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="tag-badge">📚 공학적 정의 (Engineering)</div>
-                <p id="m-desc-eng" style="color:#ccc; font-size:0.95rem; line-height:1.6; margin-bottom:30px; border-left: 2px solid #555; padding-left: 15px;">...</p>
-                
-                <div class="tag-badge" style="background: rgba(0, 204, 255, 0.15); color:var(--brand-blue);">💡 초등학생도 아는 쉬운 설명 (Vibe)</div>
-                <p id="m-desc-vibe" style="color:#fff; font-size:1.1rem; font-weight:bold; line-height:1.5;">...</p>
-            </div>
+        <div class="modal-box">
+            <h2 id="m-title" style="color:var(--brand-blue); margin-top:0;">Title</h2>
+            <div style="font-size:0.75rem; color:#666; margin-bottom:15px; font-weight:bold;">ENGINEERING DEF.</div>
+            <p id="m-eng" style="color:#ccc; font-size:0.9rem; line-height:1.6; margin-bottom:25px; border-left:3px solid #444; padding-left:15px;">...</p>
+            <div style="font-size:0.75rem; color:var(--brand-gold); margin-bottom:15px; font-weight:bold;">VIBE CHECK (EASY MODE)</div>
+            <p id="m-vibe" style="color:#fff; font-size:1.05rem; font-weight:bold; line-height:1.5;">...</p>
+            <button onclick="closeModalBtn()" style="width:100%; padding:12px; margin-top:20px; background:#333; border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold;">닫기 (Close)</button>
         </div>
     </div>
 
     <header>
-        <div class="brand-title">DREAM-FI MECHANICS <span style="color:#444;">|</span> 05</div>
+        <div class="brand-title">DREAM-FI MECHANICS | 05</div>
     </header>
 
-    <div class="main-container">
-        <div class="left-panel">
-            <div class="panel-label">CHASSIS ASSEMBLY</div>
-            <canvas id="mainCanvas" width="500" height="500"></canvas>
-            <div style="position:absolute; bottom:20px; font-size:0.8rem; color:#666;">
-                * 너클(중앙)을 기준으로 4방향에서 부품이 결합됩니다.
+    <div class="main-wrapper">
+        <div class="panel-left">
+            <div class="panel-badge">LOCATION MAP</div>
+            <canvas id="navCanvas" width="200" height="300"></canvas>
+            <div style="margin-top:15px; font-size:0.8rem; color:#555; text-align:center;">
+                현재 <span style="color:#ff4444; font-weight:bold;">앞바퀴(우측)</span><br>작업 중입니다.
             </div>
         </div>
 
-        <div class="right-panel">
-            <h3 style="margin-bottom:20px; color:#fff;">🔩 하체 4대장 조립</h3>
-            
-            <div class="part-list">
-                <div class="part-item" onclick="showInfo(1)" id="p-shock">
-                    <span style="font-weight:bold;">1. 쇼크업소버 (위)</span>
-                    <span style="font-size:0.8rem; color:#555;">ℹ️ Info</span>
-                </div>
-                <div class="part-item" onclick="showInfo(2)" id="p-arm">
-                    <span style="font-weight:bold;">2. 로어 암 (아래)</span>
-                    <span style="font-size:0.8rem; color:#555;">ℹ️ Info</span>
-                </div>
-                <div class="part-item" onclick="showInfo(3)" id="p-tie">
-                    <span style="font-weight:bold;">3. 타이로드 (옆)</span>
-                    <span style="font-size:0.8rem; color:#555;">ℹ️ Info</span>
-                </div>
-                <div class="part-item" onclick="showInfo(4)" id="p-shaft">
-                    <span style="font-weight:bold;">4. 등속 조인트 (중앙)</span>
-                    <span style="font-size:0.8rem; color:#555;">ℹ️ Info</span>
-                </div>
+        <div class="panel-center" id="main-container">
+            <div class="panel-badge" style="color:var(--brand-blue);">ASSEMBLY VIEW</div>
+            <canvas id="mainCanvas" width="600" height="600"></canvas>
+            <div style="position:absolute; bottom:20px; font-size:0.8rem; color:rgba(255,255,255,0.3);">
+                Drag to Rotate 360°
+            </div>
+        </div>
+
+        <div class="panel-right">
+            <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0;">🔩 하체 조립</h3>
+                <span style="font-size:0.8rem; color:#666;">Step 5/5</span>
             </div>
 
-            <div class="controls-box">
-                <div style="color:var(--brand-blue); font-size:0.9rem; font-weight:bold; margin-bottom:10px;">ASSEMBLY SLIDER 🛠️</div>
-                <input type="range" id="assemblyRange" min="0" max="100" step="1" value="0">
-                <div id="statusText" style="color:#fff; font-weight:bold; margin-top:10px;">부품 대기 중 (Ready)</div>
+            <div class="slider-box">
+                <label style="font-size:0.85rem; color:var(--brand-blue); font-weight:bold;">ASSEMBLY SLIDER</label>
+                <input type="range" id="assemblyRange" min="0" max="100" value="0">
+                <div id="statusText" style="font-size:0.9rem; font-weight:bold;">대기 중 (Ready)</div>
+            </div>
+
+            <div class="part-list">
+                <div class="part-item" onclick="showInfo(1)" id="p-shock">
+                    <span>1. 쇼크업소버 (위)</span> <span style="opacity:0.5">ℹ️</span>
+                </div>
+                <div class="part-item" onclick="showInfo(2)" id="p-arm">
+                    <span>2. 로어 암 (아래)</span> <span style="opacity:0.5">ℹ️</span>
+                </div>
+                <div class="part-item" onclick="showInfo(3)" id="p-tie">
+                    <span>3. 타이로드 (옆)</span> <span style="opacity:0.5">ℹ️</span>
+                </div>
+                <div class="part-item" onclick="showInfo(4)" id="p-shaft">
+                    <span>4. 등속 조인트 (중앙)</span> <span style="opacity:0.5">ℹ️</span>
+                </div>
             </div>
             
-            <a href="../index.html" class="nav-back">MENU</a>
+            <div style="font-size:0.8rem; color:#444; line-height:1.4; text-align:center; margin-top:auto;">
+                * 너클(Knuckle)은 자동차 하체의<br><b>만남의 광장</b>입니다.
+            </div>
         </div>
     </div>
 
+    <footer class="nav-footer">
+        <a href="../04-brake/index.html" class="nav-btn">
+            ◀ 이전 단계 (제동장치)
+        </a>
+        <a href="../index.html" class="nav-btn primary">
+            목차로 가기 (Menu) 🏠
+        </a>
+    </footer>
+
     <script>
+        // [데이터]
         const partsInfo = {
-            1: {
-                title: "쇼크업소버 (Shock Absorber)",
-                eng: "스프링의 진동을 억제하는 유압 장치입니다. 노면 충격을 운동에너지에서 열에너지로 변환하여 소멸시킵니다.",
-                vibe: "\"자동차의 무릎 관절\"\n높은 곳에서 뛰어내릴 때 무릎을 굽히는 것과 같아요! 울퉁불퉁한 길을 갈 때 충격을 부드럽게 흡수해 주는 푹신한 쿠션입니다."
-            },
-            2: {
-                title: "로어 암 (Lower Arm)",
-                eng: "차체 프레임과 너클 하단을 연결하는 지지대입니다. 주행 중 발생하는 횡력과 전후력을 지지하며 휠의 위치를 고정합니다.",
-                vibe: "\"바퀴를 받쳐주는 튼튼한 팔\"\n무거운 책을 손바닥으로 받치고 있다고 상상해보세요. 바퀴가 도망가지 않게 아래쪽에서 든든하게 받쳐주는 '아랫도리 뼈대'입니다."
-            },
-            3: {
-                title: "타이로드 (Tie Rod)",
-                eng: "스티어링 기어(핸들)의 움직임을 너클에 전달하는 막대입니다. 길이 조절을 통해 바퀴의 정렬(토우)을 맞춥니다.",
-                vibe: "\"방향 지시 막대기\"\n자전거 핸들바와 같습니다! 운전자가 핸들을 돌리면 이 막대기가 너클을 밀거나 당겨서 바퀴가 왼쪽, 오른쪽을 보게 만듭니다."
-            },
-            4: {
-                title: "등속 조인트 (Drive Shaft)",
-                eng: "변속기에서 나온 회전력을 바퀴로 전달하는 축입니다. 관절(Joint) 구조로 되어 있어 바퀴가 위아래로 움직여도 동력을 끊김 없이 전달합니다.",
-                vibe: "\"에너지 배달부\"\n엔진이 만든 힘을 바퀴 한가운데로 꽂아주는 '회전 막대'입니다. 이게 돌아가야 차가 앞으로 나갑니다!"
-            }
+            1: { t: "쇼크업소버", e: "스프링의 진동을 억제하는 유압 장치. 노면 충격을 열에너지로 변환.", v: "\"자동차의 무릎 관절\"\n높은 곳에서 뛸 때 무릎을 굽히는 것과 같아요. 울퉁불퉁한 길의 충격을 푹신하게 흡수합니다." },
+            2: { t: "로어 암", e: "차체 프레임과 너클 하단을 연결하는 지지대. 횡력과 전후력을 지지함.", v: "\"바퀴를 받쳐주는 팔\"\n무거운 책을 손바닥으로 받치듯, 바퀴가 도망가지 않게 아래서 든든하게 받쳐주는 뼈대입니다." },
+            3: { t: "타이로드", e: "스티어링 기어의 움직임을 너클에 전달하여 조향각을 제어하는 막대.", v: "\"방향 지시 막대기\"\n핸들을 돌리면 이 막대가 너클을 밀고 당겨서 바퀴가 왼쪽, 오른쪽을 보게 만듭니다." },
+            4: { t: "등속 조인트", e: "변속기의 회전력을 바퀴로 전달하는 관절형 구동축.", v: "\"에너지 배달부\"\n엔진 힘을 바퀴 한가운데로 꽂아주는 회전 막대입니다. 이게 돌아야 차가 나갑니다!" }
         };
 
+        // [팝업 로직]
         const modal = document.getElementById('info-modal');
         function showInfo(id) {
             const d = partsInfo[id];
-            document.getElementById('m-title').innerText = d.title;
-            document.getElementById('m-desc-eng').innerText = d.eng;
-            document.getElementById('m-desc-vibe').innerText = d.vibe;
+            document.getElementById('m-title').innerText = d.t;
+            document.getElementById('m-eng').innerText = d.e;
+            document.getElementById('m-vibe').innerText = d.v;
             modal.style.display = 'flex';
             setTimeout(() => modal.classList.add('show'), 10);
         }
         function closeModal(e) { if(e.target === modal) closeModalBtn(); }
-        function closeModalBtn() {
-            modal.classList.remove('show');
-            setTimeout(() => modal.style.display = 'none', 300);
-        }
+        function closeModalBtn() { modal.classList.remove('show'); setTimeout(() => modal.style.display = 'none', 300); }
 
-        const canvas = document.getElementById('mainCanvas');
-        const ctx = canvas.getContext('2d');
+        // [1. 내비게이터 캔버스 (Navigator)]
+        const navCanvas = document.getElementById('navCanvas');
+        const navCtx = navCanvas.getContext('2d');
+
+        function drawNavigator() {
+            navCtx.clearRect(0, 0, 200, 300);
+            const cx = 100, cy = 150;
+            
+            // 자동차 뼈대 (Skeleton)
+            navCtx.strokeStyle = "#444"; navCtx.lineWidth = 2;
+            // 차체
+            navCtx.strokeRect(cx - 40, cy - 80, 80, 160);
+            // 앞바퀴 축
+            navCtx.beginPath(); navCtx.moveTo(cx - 60, cy - 60); navCtx.lineTo(cx + 60, cy - 60); navCtx.stroke();
+            // 뒷바퀴 축
+            navCtx.beginPath(); navCtx.moveTo(cx - 60, cy + 60); navCtx.lineTo(cx + 60, cy + 60); navCtx.stroke();
+            
+            // 바퀴 4개
+            navCtx.fillStyle = "#333";
+            navCtx.fillRect(cx - 70, cy - 75, 20, 30); // 앞왼쪽
+            navCtx.fillRect(cx + 50, cy - 75, 20, 30); // 앞오른쪽 (타겟)
+            navCtx.fillRect(cx - 70, cy + 45, 20, 30); // 뒤왼쪽
+            navCtx.fillRect(cx + 50, cy + 45, 20, 30); // 뒤오른쪽
+
+            // 타겟 표시 (깜빡임 효과)
+            const alpha = (Math.sin(Date.now() / 200) + 1) / 2;
+            navCtx.fillStyle = `rgba(255, 68, 68, ${alpha})`;
+            navCtx.beginPath(); navCtx.arc(cx + 60, cy - 60, 8, 0, Math.PI*2); navCtx.fill();
+            navCtx.strokeStyle = "red"; navCtx.lineWidth = 1; navCtx.stroke();
+
+            requestAnimationFrame(drawNavigator);
+        }
+        drawNavigator();
+
+        // [2. 메인 어셈블리 캔버스 (Assembly)]
+        const mainCanvas = document.getElementById('mainCanvas');
+        const ctx = mainCanvas.getContext('2d');
         const range = document.getElementById('assemblyRange');
         const statusText = document.getElementById('statusText');
+        const mainContainer = document.getElementById('main-container');
+
+        // 마우스 회전 로직
+        let mouseX = 0; let targetAngle = 0; let currentAngle = 0;
+        mainContainer.addEventListener('mousemove', (e) => {
+            const rect = mainContainer.getBoundingClientRect();
+            mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1; // -1 ~ 1
+        });
 
         function drawMetalGradient(x, y, w, h, isVertical) {
-            const grad = isVertical 
-                ? ctx.createLinearGradient(x, y, x + w, y)
-                : ctx.createLinearGradient(x, y, x, y + h);
-            grad.addColorStop(0, "#444");
-            grad.addColorStop(0.2, "#888"); 
-            grad.addColorStop(0.5, "#333");
-            grad.addColorStop(0.8, "#666");
-            grad.addColorStop(1, "#222");
+            const grad = isVertical ? ctx.createLinearGradient(x,y,x+w,y) : ctx.createLinearGradient(x,y,x,y+h);
+            grad.addColorStop(0,"#333"); grad.addColorStop(0.5,"#666"); grad.addColorStop(1,"#222");
             return grad;
         }
 
-        function drawScene() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-            const progress = parseInt(range.value) / 100;
+        function drawAssembly() {
+            ctx.clearRect(0,0, mainCanvas.width, mainCanvas.height);
+            const cx = mainCanvas.width/2; const cy = mainCanvas.height/2;
             
+            // 회전 부드럽게
+            targetAngle = mouseX * 0.5; // 최대 0.5라디안 회전
+            currentAngle += (targetAngle - currentAngle) * 0.1;
+            
+            const progress = parseInt(range.value)/100;
+            const bounce = (progress >= 1) ? Math.sin(Date.now()/300)*5 : 0;
+
+            // 텍스트 업데이트
             if(progress < 0.1) statusText.innerText = "부품 대기 중 (Ready)";
             else if(progress < 1) statusText.innerText = "조립 중... (Assembling)";
-            else statusText.innerText = "조립 완료! (Suspension Active)";
-            
-            if(progress >= 1) statusText.style.color = "#00ccff";
-            else statusText.style.color = "#fff";
+            else { statusText.innerText = "조립 완료! (Suspension Active)"; statusText.style.color="var(--brand-blue)"; }
 
-            const bounce = (progress >= 1) ? Math.sin(Date.now() / 300) * 10 : 0;
-
+            // 전체 회전 적용
             ctx.save();
-            ctx.translate(0, bounce);
-            
-            // Knuckle & Hub (Center)
-            ctx.fillStyle = "#3a3a3a";
-            ctx.beginPath(); ctx.roundRect(cx - 30, cy - 60, 60, 120, 10); ctx.fill();
-            ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(cx, cy, 35, 0, Math.PI*2); ctx.fill();
-            ctx.strokeStyle = "#ccc"; ctx.lineWidth = 4; ctx.stroke();
-            ctx.fillStyle = "#555";
-            for(let i=0; i<5; i++) {
-                const ang = (i/5)*Math.PI*2 - Math.PI/2;
-                ctx.beginPath(); ctx.arc(cx + Math.cos(ang)*20, cy + Math.sin(ang)*20, 3, 0, Math.PI*2); ctx.fill();
-            }
-            ctx.restore();
+            ctx.translate(cx, cy + bounce);
+            ctx.rotate(currentAngle); // 마우스 회전 반영
 
-            // 1. Shock Absorber (Top)
-            const shockY = (cy - 200) + (progress * 110); 
-            const shockBounce = bounce * 0.5;
-            ctx.strokeStyle = "var(--brand-gold)"; ctx.lineWidth = 6; ctx.lineCap = "round";
+            // [너클 (중앙)]
+            ctx.fillStyle = "#3a3a3a"; ctx.beginPath(); ctx.roundRect(-30, -60, 60, 120, 10); ctx.fill();
+            ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(0, 0, 35, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = "#aaa"; ctx.lineWidth=3; ctx.stroke(); // 베어링
+
+            // 1. 쇼크업소버 (위)
+            const shockY = -200 + (progress * 130);
+            ctx.strokeStyle = "var(--brand-gold)"; ctx.lineWidth=6; 
             ctx.beginPath();
-            let startY = shockY - 80 + shockBounce;
-            let endY = cy - 60 + bounce; 
-            for(let y = startY; y < endY; y+=10) { ctx.moveTo(cx - 15, y); ctx.lineTo(cx + 15, y+5); ctx.lineTo(cx - 15, y+10); }
+            for(let y=shockY-60; y<-60; y+=10) { ctx.moveTo(-15,y); ctx.lineTo(15,y+5); ctx.lineTo(-15,y+10); }
             ctx.stroke();
-            ctx.fillStyle = "#222"; ctx.fillRect(cx - 5, startY - 20, 10, endY - startY + 20);
 
-            // 2. Lower Arm (Bottom)
-            const armY = (cy + 150) - (progress * 70);
-            ctx.fillStyle = drawMetalGradient(cx-60, armY, 120, 20, true);
-            ctx.beginPath(); ctx.moveTo(cx, cy + 60 + bounce); ctx.lineTo(cx - 60, armY + 40); ctx.lineTo(cx + 60, armY + 40); ctx.fill();
-            ctx.fillStyle = "#00ccff"; ctx.beginPath(); ctx.arc(cx, cy + 60 + bounce, 8, 0, Math.PI*2); ctx.fill();
+            // 2. 로어암 (아래)
+            const armY = 150 - (progress * 80);
+            ctx.fillStyle = drawMetalGradient(-60, armY, 120, 20, true);
+            ctx.beginPath(); ctx.moveTo(0, 60); ctx.lineTo(-60, armY+40); ctx.lineTo(60, armY+40); ctx.fill();
+            ctx.fillStyle="#00ccff"; ctx.beginPath(); ctx.arc(0, 60, 6, 0, Math.PI*2); ctx.fill(); // 볼조인트
 
-            // 3. Tie Rod (Left)
-            const tieX = (cx - 180) + (progress * 130);
-            ctx.fillStyle = drawMetalGradient(tieX, cy, 100, 10, false);
-            ctx.beginPath(); ctx.roundRect(tieX, cy + 10 + bounce, 100, 8, 4); ctx.fill();
-            ctx.fillStyle = "#ff4444"; ctx.beginPath(); ctx.arc(tieX + 100, cy + 14 + bounce, 6, 0, Math.PI*2); ctx.fill();
+            // 3. 타이로드 (좌)
+            const tieX = -180 + (progress * 140);
+            ctx.fillStyle = "#666"; ctx.fillRect(tieX, 10, 100, 8);
+            ctx.fillStyle = "#ff4444"; ctx.beginPath(); ctx.arc(tieX+100, 14, 6, 0, Math.PI*2); ctx.fill();
 
-            // 4. Drive Shaft (Right)
-            const shaftX = (cx + 180) - (progress * 180);
-            ctx.fillStyle = "#1a1a1a"; ctx.beginPath(); ctx.roundRect(shaftX, cy - 10 + bounce, 120, 20, 5); ctx.fill();
-            ctx.fillStyle = "#333"; ctx.beginPath(); ctx.ellipse(shaftX, cy + bounce, 10, 15, 0, 0, Math.PI*2); ctx.fill();
-            
-            if(progress < 0.9) {
-                ctx.strokeStyle = "rgba(0, 204, 255, 0.3)"; ctx.lineWidth = 1; ctx.setLineDash([5, 5]);
-                ctx.beginPath(); ctx.moveTo(cx, shockY+20); ctx.lineTo(cx, cy-60); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(cx, armY); ctx.lineTo(cx, cy+60); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(tieX+100, cy+14); ctx.lineTo(cx-30, cy+14); ctx.stroke();
-                ctx.setLineDash([]);
-            }
-            requestAnimationFrame(drawScene);
+            // 4. 등속조인트 (우)
+            const shaftX = 180 - (progress * 180);
+            ctx.fillStyle = "#222"; ctx.fillRect(shaftX, -10, 120, 20);
+            ctx.fillStyle = "#333"; ctx.beginPath(); ctx.ellipse(shaftX, 0, 8, 15, 0, 0, Math.PI*2); ctx.fill(); // 부츠
+
+            ctx.restore();
+            requestAnimationFrame(drawAssembly);
         }
-        drawScene();
+        drawAssembly();
     </script>
 </body>
 </html>
