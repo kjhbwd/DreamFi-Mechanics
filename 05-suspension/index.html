@@ -1,1 +1,248 @@
 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream-Fi #05: 현가장치 (Suspension)</title>
+    <style>
+        :root { --brand-gold: #ffcc00; --brand-blue: #00ccff; --bg-dark: #0f0f0f; --panel-bg: #1a1a1a; }
+        body { background: var(--bg-dark); color: white; font-family: 'Pretendard', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        header { height: 60px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #333; background: #000; z-index: 10; }
+        .brand-title { color: var(--brand-blue); font-weight: 900; letter-spacing: 1px; font-size: 1.2rem; text-transform: uppercase; }
+
+        .main-container { display: flex; flex: 1; height: calc(100vh - 60px); }
+
+        /* 왼쪽 패널: 조립 작업장 */
+        .left-panel { flex: 1; background: radial-gradient(circle at center, #222 0%, #000 80%); border-right: 1px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .panel-label { position: absolute; top: 20px; left: 20px; color: #fff; font-size: 0.75rem; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 30px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+
+        .right-panel { flex: 1; background: var(--panel-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; border-left: 1px solid #222; }
+
+        canvas { max-width: 100%; max-height: 100%; filter: drop-shadow(0 20px 50px rgba(0,0,0,0.9)); }
+
+        .controls-box { width: 85%; text-align: center; margin-top: 30px; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 15px; border: 1px solid #333; }
+        
+        input[type=range] { width: 100%; -webkit-appearance: none; background: #333; height: 8px; border-radius: 4px; outline: none; margin: 15px 0; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: var(--brand-blue); border-radius: 50%; cursor: pointer; border: 3px solid #fff; box-shadow: 0 0 15px var(--brand-blue); transition: 0.2s; }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        .part-list { width: 85%; text-align: left; margin-bottom: 10px; }
+        .part-item { 
+            display: flex; justify-content: space-between; padding: 15px; 
+            border-bottom: 1px solid #333; font-size: 0.95rem; color: #888; 
+            cursor: pointer; transition: all 0.3s; position: relative;
+        }
+        .part-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .part-item.active { color: white; background: linear-gradient(90deg, rgba(0, 204, 255, 0.15), transparent); border-left: 4px solid var(--brand-blue); padding-left: 11px; }
+        
+        /* 팝업창 스타일 (고급형) */
+        #info-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.3s; }
+        #info-modal.show { opacity: 1; }
+        
+        .modal-content { 
+            background: #1a1a1a; border: 1px solid #444; width: 380px; text-align: left; 
+            border-radius: 20px; overflow: hidden; box-shadow: 0 0 60px rgba(0,0,0,0.8);
+            transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        #info-modal.show .modal-content { transform: scale(1); }
+
+        .modal-header { background: linear-gradient(135deg, #222, #111); padding: 25px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 30px; }
+        .tag-badge { font-size: 0.75rem; font-weight: bold; background: #333; color: #aaa; padding: 5px 10px; border-radius: 6px; margin-bottom: 12px; display: inline-block; }
+        
+        .nav-back { position: absolute; bottom: 20px; right: 20px; color: #555; text-decoration: none; font-size: 0.8rem; transition: 0.3s; }
+        .nav-back:hover { color: var(--brand-blue); }
+    </style>
+</head>
+<body>
+
+    <div id="info-modal" onclick="closeModal(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="m-title" style="font-size:1.3rem; font-weight:900; color:white; letter-spacing:-0.5px;">TITLE</span>
+                <button onclick="closeModalBtn()" style="background:none; border:none; color:#666; font-size:1.8rem; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tag-badge">📚 공학적 정의 (Engineering)</div>
+                <p id="m-desc-eng" style="color:#ccc; font-size:0.95rem; line-height:1.6; margin-bottom:30px; border-left: 2px solid #555; padding-left: 15px;">...</p>
+                
+                <div class="tag-badge" style="background: rgba(0, 204, 255, 0.15); color:var(--brand-blue);">💡 초등학생도 아는 쉬운 설명 (Vibe)</div>
+                <p id="m-desc-vibe" style="color:#fff; font-size:1.1rem; font-weight:bold; line-height:1.5;">...</p>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <div class="brand-title">DREAM-FI MECHANICS <span style="color:#444;">|</span> 05</div>
+    </header>
+
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="panel-label">CHASSIS ASSEMBLY</div>
+            <canvas id="mainCanvas" width="500" height="500"></canvas>
+            <div style="position:absolute; bottom:20px; font-size:0.8rem; color:#666;">
+                * 너클(중앙)을 기준으로 4방향에서 부품이 결합됩니다.
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <h3 style="margin-bottom:20px; color:#fff;">🔩 하체 4대장 조립</h3>
+            
+            <div class="part-list">
+                <div class="part-item" onclick="showInfo(1)" id="p-shock">
+                    <span style="font-weight:bold;">1. 쇼크업소버 (위)</span>
+                    <span style="font-size:0.8rem; color:#555;">ℹ️ Info</span>
+                </div>
+                <div class="part-item" onclick="showInfo(2)" id="p-arm">
+                    <span style="font-weight:bold;">2. 로어 암 (아래)</span>
+                    <span style="font-size:0.8rem; color:#555;">ℹ️ Info</span>
+                </div>
+                <div class="part-item" onclick="showInfo(3)" id="p-tie">
+                    <span style="font-weight:bold;">3. 타이로드 (옆)</span>
+                    <span style="font-size:0.8rem; color:#555;">ℹ️ Info</span>
+                </div>
+                <div class="part-item" onclick="showInfo(4)" id="p-shaft">
+                    <span style="font-weight:bold;">4. 등속 조인트 (중앙)</span>
+                    <span style="font-size:0.8rem; color:#555;">ℹ️ Info</span>
+                </div>
+            </div>
+
+            <div class="controls-box">
+                <div style="color:var(--brand-blue); font-size:0.9rem; font-weight:bold; margin-bottom:10px;">ASSEMBLY SLIDER 🛠️</div>
+                <input type="range" id="assemblyRange" min="0" max="100" step="1" value="0">
+                <div id="statusText" style="color:#fff; font-weight:bold; margin-top:10px;">부품 대기 중 (Ready)</div>
+            </div>
+            
+            <a href="../index.html" class="nav-back">MENU</a>
+        </div>
+    </div>
+
+    <script>
+        const partsInfo = {
+            1: {
+                title: "쇼크업소버 (Shock Absorber)",
+                eng: "스프링의 진동을 억제하는 유압 장치입니다. 노면 충격을 운동에너지에서 열에너지로 변환하여 소멸시킵니다.",
+                vibe: "\"자동차의 무릎 관절\"\n높은 곳에서 뛰어내릴 때 무릎을 굽히는 것과 같아요! 울퉁불퉁한 길을 갈 때 충격을 부드럽게 흡수해 주는 푹신한 쿠션입니다."
+            },
+            2: {
+                title: "로어 암 (Lower Arm)",
+                eng: "차체 프레임과 너클 하단을 연결하는 지지대입니다. 주행 중 발생하는 횡력과 전후력을 지지하며 휠의 위치를 고정합니다.",
+                vibe: "\"바퀴를 받쳐주는 튼튼한 팔\"\n무거운 책을 손바닥으로 받치고 있다고 상상해보세요. 바퀴가 도망가지 않게 아래쪽에서 든든하게 받쳐주는 '아랫도리 뼈대'입니다."
+            },
+            3: {
+                title: "타이로드 (Tie Rod)",
+                eng: "스티어링 기어(핸들)의 움직임을 너클에 전달하는 막대입니다. 길이 조절을 통해 바퀴의 정렬(토우)을 맞춥니다.",
+                vibe: "\"방향 지시 막대기\"\n자전거 핸들바와 같습니다! 운전자가 핸들을 돌리면 이 막대기가 너클을 밀거나 당겨서 바퀴가 왼쪽, 오른쪽을 보게 만듭니다."
+            },
+            4: {
+                title: "등속 조인트 (Drive Shaft)",
+                eng: "변속기에서 나온 회전력을 바퀴로 전달하는 축입니다. 관절(Joint) 구조로 되어 있어 바퀴가 위아래로 움직여도 동력을 끊김 없이 전달합니다.",
+                vibe: "\"에너지 배달부\"\n엔진이 만든 힘을 바퀴 한가운데로 꽂아주는 '회전 막대'입니다. 이게 돌아가야 차가 앞으로 나갑니다!"
+            }
+        };
+
+        const modal = document.getElementById('info-modal');
+        function showInfo(id) {
+            const d = partsInfo[id];
+            document.getElementById('m-title').innerText = d.title;
+            document.getElementById('m-desc-eng').innerText = d.eng;
+            document.getElementById('m-desc-vibe').innerText = d.vibe;
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+        function closeModal(e) { if(e.target === modal) closeModalBtn(); }
+        function closeModalBtn() {
+            modal.classList.remove('show');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const range = document.getElementById('assemblyRange');
+        const statusText = document.getElementById('statusText');
+
+        function drawMetalGradient(x, y, w, h, isVertical) {
+            const grad = isVertical 
+                ? ctx.createLinearGradient(x, y, x + w, y)
+                : ctx.createLinearGradient(x, y, x, y + h);
+            grad.addColorStop(0, "#444");
+            grad.addColorStop(0.2, "#888"); 
+            grad.addColorStop(0.5, "#333");
+            grad.addColorStop(0.8, "#666");
+            grad.addColorStop(1, "#222");
+            return grad;
+        }
+
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const progress = parseInt(range.value) / 100;
+            
+            if(progress < 0.1) statusText.innerText = "부품 대기 중 (Ready)";
+            else if(progress < 1) statusText.innerText = "조립 중... (Assembling)";
+            else statusText.innerText = "조립 완료! (Suspension Active)";
+            
+            if(progress >= 1) statusText.style.color = "#00ccff";
+            else statusText.style.color = "#fff";
+
+            const bounce = (progress >= 1) ? Math.sin(Date.now() / 300) * 10 : 0;
+
+            ctx.save();
+            ctx.translate(0, bounce);
+            
+            // Knuckle & Hub (Center)
+            ctx.fillStyle = "#3a3a3a";
+            ctx.beginPath(); ctx.roundRect(cx - 30, cy - 60, 60, 120, 10); ctx.fill();
+            ctx.fillStyle = "#111"; ctx.beginPath(); ctx.arc(cx, cy, 35, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = "#ccc"; ctx.lineWidth = 4; ctx.stroke();
+            ctx.fillStyle = "#555";
+            for(let i=0; i<5; i++) {
+                const ang = (i/5)*Math.PI*2 - Math.PI/2;
+                ctx.beginPath(); ctx.arc(cx + Math.cos(ang)*20, cy + Math.sin(ang)*20, 3, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.restore();
+
+            // 1. Shock Absorber (Top)
+            const shockY = (cy - 200) + (progress * 110); 
+            const shockBounce = bounce * 0.5;
+            ctx.strokeStyle = "var(--brand-gold)"; ctx.lineWidth = 6; ctx.lineCap = "round";
+            ctx.beginPath();
+            let startY = shockY - 80 + shockBounce;
+            let endY = cy - 60 + bounce; 
+            for(let y = startY; y < endY; y+=10) { ctx.moveTo(cx - 15, y); ctx.lineTo(cx + 15, y+5); ctx.lineTo(cx - 15, y+10); }
+            ctx.stroke();
+            ctx.fillStyle = "#222"; ctx.fillRect(cx - 5, startY - 20, 10, endY - startY + 20);
+
+            // 2. Lower Arm (Bottom)
+            const armY = (cy + 150) - (progress * 70);
+            ctx.fillStyle = drawMetalGradient(cx-60, armY, 120, 20, true);
+            ctx.beginPath(); ctx.moveTo(cx, cy + 60 + bounce); ctx.lineTo(cx - 60, armY + 40); ctx.lineTo(cx + 60, armY + 40); ctx.fill();
+            ctx.fillStyle = "#00ccff"; ctx.beginPath(); ctx.arc(cx, cy + 60 + bounce, 8, 0, Math.PI*2); ctx.fill();
+
+            // 3. Tie Rod (Left)
+            const tieX = (cx - 180) + (progress * 130);
+            ctx.fillStyle = drawMetalGradient(tieX, cy, 100, 10, false);
+            ctx.beginPath(); ctx.roundRect(tieX, cy + 10 + bounce, 100, 8, 4); ctx.fill();
+            ctx.fillStyle = "#ff4444"; ctx.beginPath(); ctx.arc(tieX + 100, cy + 14 + bounce, 6, 0, Math.PI*2); ctx.fill();
+
+            // 4. Drive Shaft (Right)
+            const shaftX = (cx + 180) - (progress * 180);
+            ctx.fillStyle = "#1a1a1a"; ctx.beginPath(); ctx.roundRect(shaftX, cy - 10 + bounce, 120, 20, 5); ctx.fill();
+            ctx.fillStyle = "#333"; ctx.beginPath(); ctx.ellipse(shaftX, cy + bounce, 10, 15, 0, 0, Math.PI*2); ctx.fill();
+            
+            if(progress < 0.9) {
+                ctx.strokeStyle = "rgba(0, 204, 255, 0.3)"; ctx.lineWidth = 1; ctx.setLineDash([5, 5]);
+                ctx.beginPath(); ctx.moveTo(cx, shockY+20); ctx.lineTo(cx, cy-60); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(cx, armY); ctx.lineTo(cx, cy+60); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(tieX+100, cy+14); ctx.lineTo(cx-30, cy+14); ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            requestAnimationFrame(drawScene);
+        }
+        drawScene();
+    </script>
+</body>
+</html>
