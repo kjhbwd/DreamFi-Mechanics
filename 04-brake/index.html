@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream-Fi #04: 제동 장치 (3D)</title>
+    <style>
+        /* [전역 스타일] */
+        :root { --brand-gold: #ffcc00; --brand-red: #ff4444; --bg-dark: #121212; --panel-bg: #1e1e1e; }
+        body { background: var(--bg-dark); color: white; font-family: 'Pretendard', 'Malgun Gothic', sans-serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* 헤더 */
+        header { height: 60px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #333; background: #111; z-index: 10; }
+        .brand-title { color: var(--brand-red); font-weight: 800; letter-spacing: 1px; font-size: 1.2rem; text-shadow: 0 0 10px rgba(255, 68, 68, 0.5); }
+
+        /* 메인 컨테이너 (50:50) */
+        .main-container { display: flex; flex: 1; height: calc(100vh - 60px); }
+
+        /* [왼쪽] 3D 인터랙티브 맵 */
+        .left-panel { flex: 1; background: radial-gradient(circle at center, #2a2a2a, #000); border-right: 1px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; cursor: crosshair; }
+        .panel-label { position: absolute; top: 20px; left: 20px; color: #777; font-size: 0.8rem; font-weight: bold; border: 1px solid #444; padding: 5px 10px; border-radius: 5px; pointer-events: none; }
+        .mouse-guide { position: absolute; bottom: 20px; color: #555; font-size: 0.8rem; animation: blink 2s infinite; pointer-events: none; }
+
+        /* [오른쪽] 정밀 시뮬레이터 */
+        .right-panel { flex: 1; background: var(--panel-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; border-left: 1px solid #333; }
+
+        canvas { max-width: 100%; max-height: 100%; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)); }
+
+        /* 컨트롤러 UI */
+        .controls-box { width: 80%; text-align: center; margin-top: 20px; }
+        input[type=range] { width: 100%; accent-color: var(--brand-red); cursor: pointer; height: 8px; border-radius: 5px; }
+        
+        .info-btn { background: var(--brand-gold); color: #000; border: none; padding: 10px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-bottom: 20px; transition: 0.3s; box-shadow: 0 4px 15px rgba(255,204,0,0.2); }
+        .info-btn:hover { background: white; transform: scale(1.05); }
+
+        /* 게이지 스타일 */
+        .gauge-container { display: flex; justify-content: space-between; width: 100%; margin-bottom: 15px; }
+        .gauge-box { text-align: center; width: 45%; background: linear-gradient(145deg, #2a2a2a, #222); padding: 15px 10px; border-radius: 15px; border: 1px solid #333; }
+        .gauge-label { font-size: 0.75rem; color: #aaa; margin-bottom: 5px; letter-spacing: 1px; }
+        .gauge-value { font-size: 1.3rem; font-weight: 800; font-family: monospace; }
+
+        /* 팝업창 */
+        #info-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+        .modal-content { background: #1a1a1a; border: 1px solid var(--brand-red); padding: 40px; border-radius: 20px; width: 340px; text-align: center; box-shadow: 0 0 50px rgba(255, 68, 68, 0.2); transform: translateY(20px); animation: slideUp 0.5s forwards; }
+        
+        .role-box { text-align: left; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 3px solid #555; }
+        
+        @keyframes blink { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        @keyframes slideUp { to { transform: translateY(0); } }
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; overflow-y: auto; }
+            .left-panel { flex: 0.8; min-height: 300px; border-right: none; border-bottom: 1px solid #333; }
+            .right-panel { flex: 1.2; }
+            body { overflow: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="info-modal">
+        <div class="modal-content">
+            <h3 style="color:var(--brand-red); margin-top:0; font-size: 1.5rem;">멈춤의 미학 🔥</h3>
+            
+            <div class="role-box" style="border-color: #ffcc00;">
+                <span style="color:#ffcc00; font-weight:bold;">📀 디스크 (회전판)</span><br>
+                <span style="color:#ccc; font-size:0.9rem;">바퀴와 함께 미친 듯이 돌아요.</span>
+            </div>
+
+            <div class="role-box" style="border-color: #ff4444;">
+                <span style="color:#ff4444; font-weight:bold;">🦀 캘리퍼 (집게)</span><br>
+                <span style="color:#ccc; font-size:0.9rem;">브레이크를 밟으면 디스크를 '꽉' 물어서 열을 내요!</span>
+            </div>
+
+            <p style="color:#fff; font-weight:bold; margin: 25px 0; font-size: 1.1rem;">
+                "운동 에너지 ➡️ 열 에너지"<br>
+                <span style="font-size:0.85rem; color:#888; font-weight:normal;">(마찰열로 변해 공기중으로 사라집니다)</span>
+            </p>
+
+            <button onclick="toggleModal()" style="background:#333; color:#fff; border:1px solid #555; padding:12px 35px; border-radius:50px; cursor:pointer; font-weight:bold; transition:0.3s;">알겠어요!</button>
+        </div>
+    </div>
+
+    <header>
+        <div class="brand-title">DREAM-FI MECHANICS #04</div>
+    </header>
+
+    <div class="main-container">
+        <div class="left-panel" id="map-container">
+            <div class="panel-label">📍 3D CHASSIS VIEW</div>
+            <canvas id="mapCanvas" width="400" height="300"></canvas>
+            <div class="mouse-guide">🖱️ 마우스를 움직여 차를 돌려보세요</div>
+        </div>
+
+        <div class="right-panel">
+            <button class="info-btn" onclick="toggleModal()">💡 제동 원리 (Vibe)</button>
+            
+            <div class="gauge-container">
+                <div class="gauge-box">
+                    <div class="gauge-label">SPEED</div>
+                    <div class="gauge-value" id="speed-val" style="color:#00ff64;">100</div>
+                </div>
+                <div class="gauge-box">
+                    <div class="gauge-label">HEAT</div>
+                    <div class="gauge-value" id="heat-val" style="color:#fff;">25°C</div>
+                </div>
+            </div>
+
+            <canvas id="brakeCanvas" width="320" height="250"></canvas>
+            
+            <div class="controls-box">
+                <div style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">브레이크 페달 (Brake Pedal)</div>
+                <input type="range" id="brakeRange" min="0" max="100" step="1" value="0">
+                <div id="brakeText" style="color:var(--brand-red); font-weight:bold; margin-top:10px; font-size: 1rem;">주행 중... 🚗</div>
+            </div>
+            
+            <a href="../index.html" class="nav-back">← 목차로</a>
+        </div>
+    </div>
+
+    <script>
+        /* ============================
+           [Part 1] 3D 인터랙티브 맵 엔진
+           ============================ */
+        const mapContainer = document.getElementById('map-container');
+        const mapCanvas = document.getElementById('mapCanvas');
+        const mapCtx = mapCanvas.getContext('2d');
+        
+        let mouseX = 0;
+        let targetAngle = 0;
+        let currentAngle = 0; // 부드러운 회전을 위한 변수
+
+        // 마우스 이벤트 리스너
+        mapContainer.addEventListener('mousemove', (e) => {
+            const rect = mapContainer.getBoundingClientRect();
+            // 화면 중앙을 기준으로 -1 ~ 1 사이 값 계산
+            mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1; 
+        });
+
+        // 3D 포인트 변환 함수 (핵심 수학)
+        function project3D(x, y, z, angle) {
+            const scale = 180;
+            const cx = mapCanvas.width / 2;
+            const cy = mapCanvas.height / 2;
+            
+            // Y축 회전 (좌우 돌리기)
+            const rad = angle * 0.8; // 회전 반경 제한
+            const rx = x * Math.cos(rad) - z * Math.sin(rad);
+            const rz = x * Math.sin(rad) + z * Math.cos(rad);
+            
+            // 원근감 (Perspective)
+            const depth = 400 / (400 - rz); 
+            
+            return {
+                x: cx + rx * depth, // X 좌표 변환
+                y: cy + y * depth,  // Y 좌표 변환
+                scale: depth        // 거리감에 따른 크기 변화
+            };
+        }
+
+        // 3D 자동차 그리기
+        function draw3DMap() {
+            mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+            
+            // 부드러운 움직임 (선형 보간)
+            targetAngle = mouseX;
+            currentAngle += (targetAngle - currentAngle) * 0.1;
+
+            // 브레이크 작동 여부
+            const brakePower = parseInt(document.getElementById('brakeRange').value);
+            const isBraking = brakePower > 5;
+            
+            // 3D 모델 포인트 (간단한 자동차 뼈대)
+            const chassis = [
+                {x: -0.6, y: 0.2, z: -1.2}, {x: 0.6, y: 0.2, z: -1.2}, // 뒤
+                {x: 0.6, y: 0.2, z: 1.2}, {x: -0.6, y: 0.2, z: 1.2}    // 앞
+            ];
+
+            // 1. 바퀴 그리기
+            const wheels = [
+                {x: -0.7, y: 0.3, z: -0.9}, {x: 0.7, y: 0.3, z: -0.9}, // 뒤
+                {x: -0.7, y: 0.3, z: 0.9}, {x: 0.7, y: 0.3, z: 0.9}    // 앞
+            ];
+
+            wheels.forEach((w, i) => {
+                const p = project3D(w.x, w.y, w.z, currentAngle);
+                
+                // 바퀴 그림자
+                mapCtx.fillStyle = "rgba(0,0,0,0.5)";
+                mapCtx.beginPath(); mapCtx.ellipse(p.x, p.y + 10, 15 * p.scale, 5 * p.scale, 0, 0, Math.PI*2); mapCtx.fill();
+
+                // 바퀴 본체
+                mapCtx.fillStyle = "#333";
+                mapCtx.beginPath(); mapCtx.ellipse(p.x, p.y, 10 * p.scale, 25 * p.scale, currentAngle * 0.2, 0, Math.PI*2); mapCtx.fill();
+
+                // 브레이크 디스크 (안쪽에서 빛남)
+                if(isBraking) {
+                    mapCtx.fillStyle = `rgba(255, 68, 68, ${brakePower/100})`;
+                    mapCtx.shadowBlur = 15; mapCtx.shadowColor = "#ff0000";
+                    mapCtx.beginPath(); mapCtx.ellipse(p.x, p.y, 6 * p.scale, 18 * p.scale, currentAngle * 0.2, 0, Math.PI*2); mapCtx.fill();
+                    mapCtx.shadowBlur = 0;
+                }
+            });
+
+            // 2. 섀시(뼈대) 연결선 그리기
+            mapCtx.strokeStyle = "#555"; mapCtx.lineWidth = 2;
+            mapCtx.beginPath();
+            const p0 = project3D(chassis[0].x, chassis[0].y, chassis[0].z, currentAngle);
+            mapCtx.moveTo(p0.x, p0.y);
+            
+            for(let i=1; i<chassis.length; i++) {
+                const p = project3D(chassis[i].x, chassis[i].y, chassis[i].z, currentAngle);
+                mapCtx.lineTo(p.x, p.y);
+            }
+            mapCtx.lineTo(p0.x, p0.y); // 닫기
+            mapCtx.stroke();
+
+            // 3. 엔진룸 (앞쪽)
+            const enginePos = project3D(0, 0.1, 0.8, currentAngle);
+            mapCtx.fillStyle = "#222";
+            mapCtx.fillRect(enginePos.x - 20, enginePos.y - 10, 40, 20);
+            
+            // 텍스트 (앞뒤 구분)
+            const frontLabel = project3D(0, 0, 1.4, currentAngle);
+            mapCtx.fillStyle = "#fff"; mapCtx.font = "10px sans-serif"; mapCtx.textAlign = "center";
+            mapCtx.fillText("FRONT", frontLabel.x, frontLabel.y);
+
+            requestAnimationFrame(draw3DMap);
+        }
+        draw3DMap();
+
+        /* ============================
+           [Part 2] 오른쪽 정밀 시뮬레이터
+           ============================ */
+        const brakeRange = document.getElementById('brakeRange');
+        const brakeText = document.getElementById('brakeText');
+        const speedVal = document.getElementById('speed-val');
+        const heatVal = document.getElementById('heat-val');
+        const canvas = document.getElementById('brakeCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let simSpeed = 100;
+        let simHeat = 0;
+        let simAngle = 0;
+
+        function drawSim() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const cx = canvas.width / 2; const cy = 125;
+            const brakeInput = parseInt(brakeRange.value);
+
+            // 물리 연산
+            if (brakeInput > 0) {
+                simSpeed -= (brakeInput * 0.05);
+                simHeat += (brakeInput * 0.1) * (simSpeed/50);
+                if(simSpeed < 0) simSpeed = 0;
+                if(simHeat > 100) simHeat = 100;
+                brakeText.innerHTML = "제동 중! (마찰 발생) 🔥";
+                brakeText.style.color = "#ff4444";
+            } else {
+                simSpeed += 0.5;
+                simHeat -= 0.5;
+                if(simSpeed > 100) simSpeed = 100;
+                if(simHeat < 0) simHeat = 0;
+                brakeText.innerHTML = "주행 중... (자동 가속) 🚗";
+                brakeText.style.color = "#00ff64";
+            }
+
+            simAngle += simSpeed * 0.2;
+
+            // UI 업데이트
+            speedVal.innerText = Math.round(simSpeed);
+            heatVal.innerText = Math.round(25 + (simHeat * 5)) + "°C";
+
+            // 회전판 그리기
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(simAngle * Math.PI / 180);
+
+            // 열 색상 계산 (온도에 따라 붉어짐)
+            const r = Math.min(255, 100 + simHeat * 2);
+            const gb = Math.max(50, 100 - simHeat);
+            
+            // 금속 질감 그라데이션
+            const grad = ctx.createRadialGradient(0,0,20, 0,0,80);
+            grad.addColorStop(0, `rgb(${r},${gb},${gb})`);
+            grad.addColorStop(0.5, "#888");
+            grad.addColorStop(1, `rgb(${r},${gb},${gb})`);
+
+            // Glow 효과
+            if(simHeat > 20) {
+                ctx.shadowBlur = simHeat * 0.5;
+                ctx.shadowColor = "#ff4444";
+            }
+
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.arc(0, 0, 80, 0, Math.PI*2); ctx.fill();
+            
+            // 구멍 디테일
+            ctx.fillStyle = "#1a1a1a";
+            for(let i=0; i<8; i++) {
+                ctx.beginPath(); ctx.arc(50, 0, 4, 0, Math.PI*2); ctx.fill();
+                ctx.rotate(Math.PI/4);
+            }
+            ctx.restore();
+
+            // 캘리퍼 (고정)
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = "#ff4444"; // 브렘보 레드
+            
+            // 브레이크 밟으면 살짝 수축
+            const squeeze = brakeInput * 0.05;
+            ctx.beginPath(); ctx.roundRect(cx + 45 - squeeze, cy - 50, 50, 100, 8); ctx.fill();
+            
+            // 캘리퍼 텍스트
+            ctx.fillStyle = "white"; ctx.font = "bold 10px sans-serif";
+            ctx.save(); ctx.translate(cx + 70, cy); ctx.rotate(Math.PI/2);
+            ctx.fillText("DREAM-FI", -20, 0);
+            ctx.restore();
+
+            requestAnimationFrame(drawSim);
+        }
+        drawSim();
+
+        function toggleModal() {
+            const modal = document.getElementById('info-modal');
+            modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+        }
+    </script>
+</body>
+</html>
