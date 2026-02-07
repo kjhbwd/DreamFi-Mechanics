@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dream-Fi Mechanics | 1-1</title>
     <style>
+        /* 기본 설정 */
         body {
-            background-color: #0a0a0a; color: white; font-family: sans-serif;
+            background-color: #050505; color: white; font-family: sans-serif;
             margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
         header {
@@ -17,7 +18,7 @@
 
         .main-container { display: flex; flex: 1; height: 100%; }
         
-        /* 왼쪽: 미니맵 */
+        /* 왼쪽 패널 */
         .minimap-panel {
             width: 250px; border-right: 1px solid #333; background: #0f0f0f;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -34,33 +35,44 @@
         .status-text { margin-top: 20px; font-size: 0.8rem; color: #666; text-align: center; }
         .status-highlight { color: #ff4d4d; font-weight: bold; }
 
-        /* 중앙: 작업 공간 */
+        /* 중앙 작업 공간 */
         .workspace {
-            flex: 1; position: relative; background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
-            display: flex; justify-content: center; align-items: center; perspective: 1000px;
+            flex: 1; position: relative; background: radial-gradient(circle at center, #222 0%, #000 100%);
+            display: flex; justify-content: center; align-items: center;
         }
         .tag {
             position: absolute; padding: 5px 10px; background: rgba(0,0,0,0.7); border-radius: 4px;
             font-size: 0.8rem; font-weight: bold; color: white; border-left: 3px solid #ff4d4d;
         }
 
-        /* 중앙 엔진 아이콘 */
+        /* ★ 디자인 복구: 중앙 엔진 ★ */
         .engine-icon {
-            width: 120px; height: 160px; background: #333; border-radius: 10px;
+            width: 140px; height: 180px; background: #2a2a2a; border-radius: 15px;
             display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid #444;
-            transition: 0.5s; z-index: 2; font-weight: bold; color: #ff4d4d;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 2px solid #444;
+            transition: 0.5s; z-index: 2; font-weight: 800; color: #666; font-size: 1.2rem;
+            flex-direction: column; gap: 10px;
         }
-        
-        /* 부품들 */
+        .engine-detail { width: 80%; height: 5px; background: #111; border-radius: 2px; }
+
+        /* ★ 디자인 복구: 부품들 ★ */
         .part {
-            position: absolute; width: 80px; height: 80px; background: #222; border: 1px solid #444;
-            display: flex; justify-content: center; align-items: center; font-size: 0.8rem; color: #aaa;
-            transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0.5; cursor: pointer;
+            position: absolute; width: 90px; height: 90px; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            font-size: 0.8rem; color: #ccc; font-weight: bold;
+            transition: 0.8s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
+            background: rgba(255,255,255,0.05); border: 1px solid #444; border-radius: 10px;
+            backdrop-filter: blur(5px);
         }
-        .part:hover { border-color: #ff4d4d; color: white; opacity: 1; transform: scale(1.1); }
-        
-        /* 오른쪽: 컨트롤 패널 */
+        /* 부품 개별 디자인 */
+        #part1 { border-top: 4px solid #aaa; } /* 변속기 */
+        #part2 { border-bottom: 4px solid #aaa; } /* 마운트 */
+        #part3 { border-left: 4px solid #00ccff; color: #00ccff; } /* 냉각수 */
+        #part4 { border-right: 4px solid #ffcc00; color: #ffcc00; } /* 배기구 */
+
+        .part:hover { border-color: #ff4d4d; color: white; transform: scale(1.1); background: #222; }
+
+        /* 오른쪽 패널 */
         .control-panel { width: 320px; background: #111; border-left: 1px solid #333; padding: 20px; }
         .panel-header { font-size: 1rem; font-weight: bold; margin-bottom: 20px; display: flex; justify-content: space-between; }
         .step-indicator { font-size: 0.8rem; color: #666; }
@@ -89,7 +101,7 @@
         }
         .nav-btn:hover { color: white; }
         
-        /* ★ 3D 버튼 스타일 (이게 꼭 있어야 함) */
+        /* 3D 버튼 스타일 */
         .next-btn {
             background: #ff4d4d; color: white; padding: 10px 20px; border-radius: 30px;
             font-weight: bold; text-decoration: none; font-size: 0.9rem;
@@ -122,12 +134,30 @@
         <div class="workspace">
             <div class="tag" style="top: 20px; left: 20px;">DOCKING VIEW</div>
             
-            <div class="engine-icon" id="core-engine">V4 ENGINE</div>
+            <div class="engine-icon" id="core-engine">
+                <div class="engine-detail"></div>
+                <div class="engine-detail"></div>
+                <span>V8 ENGINE</span>
+                <div class="engine-detail"></div>
+                <div class="engine-detail"></div>
+            </div>
 
-            <div class="part" id="part1" style="transform: translate(200px, 0);">1. 변속기</div>
-            <div class="part" id="part2" style="transform: translate(0, 200px);">2. 마운트</div>
-            <div class="part" id="part3" style="transform: translate(-200px, -50px);">3. 냉각수</div>
-            <div class="part" id="part4" style="transform: translate(50px, -200px);">4. 배기구</div>
+            <div class="part" id="part1" style="transform: translate(220px, 0);">
+                <div style="font-size:1.5rem;">⚙️</div>
+                <span>1. 변속기</span>
+            </div>
+            <div class="part" id="part2" style="transform: translate(0, 220px);">
+                <div style="font-size:1.5rem;">🔩</div>
+                <span>2. 마운트</span>
+            </div>
+            <div class="part" id="part3" style="transform: translate(-220px, -50px);">
+                <div style="font-size:1.5rem;">💧</div>
+                <span>3. 냉각수</span>
+            </div>
+            <div class="part" id="part4" style="transform: translate(50px, -220px);">
+                <div style="font-size:1.5rem;">💨</div>
+                <span>4. 배기구</span>
+            </div>
 
             <p style="position: absolute; bottom: 50px; color: #444; font-size: 0.8rem;">Drag to Rotate 360°</p>
         </div>
@@ -181,7 +211,7 @@
 
         // 초기 위치 저장
         const initialPos = [
-            {x: 200, y: 0}, {x: 0, y: 200}, {x: -200, y: -50}, {x: 50, y: -200}
+            {x: 220, y: 0}, {x: 0, y: 220}, {x: -220, y: -50}, {x: 50, y: -220}
         ];
 
         slider.addEventListener('input', (e) => {
@@ -201,11 +231,15 @@
                 
                 if(val > 80) {
                     part.style.borderColor = "#ff4d4d";
+                    part.style.background = "#222";
                     part.style.color = "white";
                     checks[index].classList.add('active');
                 } else {
                     part.style.borderColor = "#444";
-                    part.style.color = "#aaa";
+                    part.style.background = "rgba(255,255,255,0.05)";
+                    if(index === 2) part.style.color = "#00ccff"; // 냉각수 색 복구
+                    else if(index === 3) part.style.color = "#ffcc00"; // 배기구 색 복구
+                    else part.style.color = "#ccc";
                     checks[index].classList.remove('active');
                 }
             });
@@ -213,14 +247,13 @@
             if(val == 100) {
                 engine.style.boxShadow = "0 0 50px #ff4d4d";
                 engine.style.borderColor = "white";
-                engine.innerText = "DOCKING OK";
+                engine.style.color = "white";
             } else {
-                engine.style.boxShadow = "0 10px 30px rgba(0,0,0,0.5)";
+                engine.style.boxShadow = "0 20px 50px rgba(0,0,0,0.8)";
                 engine.style.borderColor = "#444";
-                engine.innerText = "V4 ENGINE";
+                engine.style.color = "#666";
             }
         });
     </script>
 </body>
 </html>
-
