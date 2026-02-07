@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dream-Fi #01-2: V8 엔진 리얼리티</title>
     <style>
+        /* 1. 전체 화면 스타일 */
         body { margin: 0; overflow: hidden; background-color: #0f0f0f; color: white; font-family: sans-serif; }
         
-        /* 로딩 화면 스타일 */
+        /* 2. 로딩 화면 (빙글빙글 도는 원) */
         #loading-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; display: flex; flex-direction: column;
@@ -20,22 +21,30 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* UI 및 텍스트 */
+        /* 3. UI 텍스트 오버레이 */
         #ui-container {
             position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
             text-align: center; pointer-events: none; width: 100%;
         }
-        h1 { margin: 0; font-size: 1.5rem; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
-        p { color: #888; font-size: 0.9rem; margin-top: 5px; }
+        h1 { margin: 0; font-size: 1.8rem; font-weight: 800; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+        p { color: #888; font-size: 0.9rem; margin-top: 5px; font-weight: 500; }
         
-        /* 뒤로가기 버튼 */
+        /* 4. 뒤로가기 버튼 */
         .back-btn {
             position: absolute; top: 20px; left: 20px; text-decoration: none;
             color: rgba(255,255,255,0.7); font-weight: bold; font-size: 0.9rem;
             background: rgba(0,0,0,0.5); padding: 10px 20px; border-radius: 20px;
-            z-index: 100; transition: 0.3s;
+            z-index: 100; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1);
         }
-        .back-btn:hover { background: rgba(255,255,255,0.2); color: white; }
+        .back-btn:hover { background: rgba(255,255,255,0.2); color: white; border-color: white; }
+
+        /* 5. 뷰 초기화 버튼 */
+        .reset-btn {
+            pointer-events: auto; margin-top: 15px; background: rgba(255, 204, 0, 0.1); 
+            border: 1px solid #ffcc00; color: #ffcc00; padding: 8px 16px; 
+            border-radius: 20px; cursor: pointer; font-weight: bold; transition: 0.3s;
+        }
+        .reset-btn:hover { background: #ffcc00; color: black; }
     </style>
     
     <script type="importmap">
@@ -51,14 +60,15 @@
 
     <div id="loading-screen">
         <div class="loader"></div>
-        <div id="loading-text">3D 엔진 로딩 중...</div>
+        <div id="loading-text">엔진 시동 거는 중... (3D Model Loading)</div>
     </div>
 
     <a href="../index.html" class="back-btn">◀ 뒤로 가기</a>
 
     <div id="ui-container">
         <h1>V8 ENGINE DETAIL</h1>
-        <p>마우스 드래그: 회전 / 휠: 확대</p>
+        <p>마우스 드래그: 회전 / 휠: 확대 / 우클릭: 이동</p>
+        <button class="reset-btn" onclick="resetCamera()">🔄 뷰 초기화</button>
     </div>
 
     <script type="module">
@@ -66,49 +76,54 @@
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-        // 1. 무대 설치
+        // 1. 무대(Scene) 설치
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x111111); // 어두운 배경
+        scene.background = new THREE.Color(0x111111); // 고급스러운 다크 그레이 배경
+        scene.fog = new THREE.Fog(0x111111, 10, 50); // 깊이감을 주는 안개
 
-        // 2. 카메라 설치
+        // 2. 카메라(Camera) 설치
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(4, 3, 5); // 보기 좋은 각도
+        camera.position.set(4, 3, 5); // 가장 예쁘게 보이는 '얼짱 각도'
 
-        // 3. 렌더러 (화질 설정)
+        // 3. 렌더러(Renderer) 설치 - 화질 담당
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.setPixelRatio(window.devicePixelRatio); // 고해상도 지원
+        renderer.toneMapping = THREE.ACESFilmicToneMapping; // 영화 같은 색감 보정
         renderer.toneMappingExposure = 1.2;
         document.body.appendChild(renderer.domElement);
 
-        // 4. 조명 설치 (스튜디오 조명)
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        // 4. 조명(Light) 설치 - 스튜디오 조명 세팅
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // 기본 밝기
         scene.add(ambientLight);
 
-        const dirLight = new THREE.DirectionalLight(0xffcc00, 3); // 주광색
-        dirLight.position.set(5, 10, 7);
-        scene.add(dirLight);
+        const mainLight = new THREE.DirectionalLight(0xffddaa, 3); // 따뜻한 태양광 (주광)
+        mainLight.position.set(5, 10, 7);
+        scene.add(mainLight);
         
-        const rimLight = new THREE.DirectionalLight(0x4455ff, 2); // 푸른 역광
-        rimLight.position.set(-5, 0, -5);
+        const rimLight = new THREE.DirectionalLight(0x4455ff, 2); // 차가운 파란색 역광 (엣지 살리기)
+        rimLight.position.set(-5, 2, -5);
         scene.add(rimLight);
 
-        // 5. 마우스 컨트롤
+        // 5. 컨트롤(Controls) - 마우스 조작
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.autoRotate = true; // 자동 회전
-        controls.autoRotateSpeed = 1.0;
+        controls.enableDamping = true; // 부드러운 감속 효과
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;    // 자동 회전 (전시 효과)
+        controls.autoRotateSpeed = 1.5;
 
-        // 6. ★핵심★ 모델 불러오기 (engine.glb)
+        // 6. ★핵심★ 3D 모델 불러오기 (engine.glb)
         const loader = new GLTFLoader();
+        
         loader.load('./engine.glb', function (gltf) {
             const model = gltf.scene;
             
-            // 모델 위치 중앙 정렬
+            // 모델 크기 및 위치 자동 보정 (박스 중앙 정렬)
             const box = new THREE.Box3().setFromObject(model);
             const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
             
+            // 모델을 화면 정중앙으로 이동
             model.position.x += (model.position.x - center.x);
             model.position.y += (model.position.y - center.y);
             model.position.z += (model.position.z - center.z);
@@ -116,29 +131,40 @@
             scene.add(model);
             
             // 로딩 화면 끄기
-            document.getElementById('loading-screen').style.opacity = 0;
-            setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
+            const loadingScreen = document.getElementById('loading-screen');
+            loadingScreen.style.opacity = 0;
+            setTimeout(() => loadingScreen.style.display = 'none', 500);
 
         }, undefined, function (error) {
             console.error(error);
-            document.getElementById('loading-text').innerText = "파일을 찾을 수 없습니다! (파일명: engine.glb)";
-            document.getElementById('loading-text').style.color = "red";
+            // 에러 발생 시 사용자에게 알림
+            document.getElementById('loading-text').innerText = "❌ 로딩 실패!\n파일 이름이 'engine.glb'인지 확인해주세요.";
+            document.getElementById('loading-text').style.color = "#ff4444";
+            document.querySelector('.loader').style.borderColor = "#ff4444";
         });
 
-        // 7. 화면 그리기 반복
+        // 7. 애니메이션 루프 (무한 반복)
         function animate() {
             requestAnimationFrame(animate);
-            controls.update();
+            controls.update(); // 마우스/자동회전 업데이트
             renderer.render(scene, camera);
         }
         animate();
 
-        // 창 크기 조절 대응
-        window.addEventListener('resize', function() {
+        // 8. 화면 크기 조절 대응 (반응형)
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        }
+
+        // 9. 뷰 초기화 기능 (버튼 클릭 시)
+        window.resetCamera = function() {
+            camera.position.set(4, 3, 5);
+            controls.target.set(0, 0, 0);
+            controls.autoRotate = !controls.autoRotate; // 회전 켜기/끄기 토글
+        }
     </script>
 </body>
 </html>
