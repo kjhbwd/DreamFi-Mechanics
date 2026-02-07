@@ -6,7 +6,7 @@
     <title>Dream-Fi Mechanics | 1-1</title>
     <style>
         body {
-            background-color: #0a0a0a; color: white; font-family: 'Pretendard', sans-serif;
+            background-color: #0a0a0a; color: white; font-family: sans-serif;
             margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
         header {
@@ -80,7 +80,7 @@
 
         /* 하단 네비게이션 */
         footer {
-            height: 50px; background: #000; border-top: 1px solid #333; display: flex;
+            height: 60px; background: #000; border-top: 1px solid #333; display: flex;
             justify-content: space-between; align-items: center; padding: 0 20px;
         }
         .nav-btn {
@@ -89,13 +89,14 @@
         }
         .nav-btn:hover { color: white; }
         
-        /* ★ 새로 추가된 버튼 스타일 */
+        /* ★ 3D 버튼 스타일 (이게 꼭 있어야 함) */
         .next-btn {
-            background: #ff4d4d; color: white; padding: 8px 16px; border-radius: 4px;
+            background: #ff4d4d; color: white; padding: 10px 20px; border-radius: 30px;
             font-weight: bold; text-decoration: none; font-size: 0.9rem;
             display: flex; align-items: center; gap: 5px; transition: 0.3s;
+            box-shadow: 0 0 10px rgba(255, 77, 77, 0.3);
         }
-        .next-btn:hover { background: #ff0000; box-shadow: 0 0 10px rgba(255,0,0,0.5); }
+        .next-btn:hover { background: #ff0000; box-shadow: 0 0 20px rgba(255, 77, 77, 0.6); transform: translateY(-2px); }
 
     </style>
 </head>
@@ -149,10 +150,6 @@
                 <div class="check-item" id="check3"><span>3. 냉각수 호스 (앞)</span><div class="check-icon"></div></div>
                 <div class="check-item" id="check4"><span>4. 배기 매니폴드 (위)</span><div class="check-icon"></div></div>
             </div>
-            
-            <p style="margin-top: 40px; font-size: 0.75rem; color: #444; text-align: right;">
-                * 엔진이 차체와 연결되어야<br>진짜 심장이 됩니다.
-            </p>
         </div>
     </div>
 
@@ -191,23 +188,17 @@
             const val = e.target.value;
             const progress = val / 100;
 
-            // 텍스트 변경
             if(val < 10) sliderText.innerText = "도킹 대기 (Standby)";
             else if(val < 90) sliderText.innerText = "도킹 중... (Docking)";
             else sliderText.innerText = "도킹 완료! (Complete)";
 
-            // 부품 이동 애니메이션
             parts.forEach((part, index) => {
                 const startX = initialPos[index].x;
                 const startY = initialPos[index].y;
-                
-                // 0%일 때 원래 위치 -> 100%일 때 (0,0)으로 이동
                 const currentX = startX * (1 - progress);
                 const currentY = startY * (1 - progress);
-                
                 part.style.transform = `translate(${currentX}px, ${currentY}px)`;
                 
-                // 가까워지면 투명도/색상 변경
                 if(val > 80) {
                     part.style.borderColor = "#ff4d4d";
                     part.style.color = "white";
@@ -219,7 +210,6 @@
                 }
             });
 
-            // 엔진 효과
             if(val == 100) {
                 engine.style.boxShadow = "0 0 50px #ff4d4d";
                 engine.style.borderColor = "white";
