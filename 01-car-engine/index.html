@@ -5,38 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dream-Fi #01: 엔진 (Engine)</title>
     <style>
-        :root { --brand-gold: #ffcc00; --brand-red: #ff4444; --bg-dark: #0f0f0f; }
+        :root { --brand-gold: #ffcc00; --brand-red: #ff4444; --bg-dark: #0f0f0f; --panel-l: #151515; --panel-c: #050505; --panel-r: #1a1a1a; }
         
+        * { box-sizing: border-box; }
+
         body { 
             background: var(--bg-dark); color: white; font-family: 'Pretendard', sans-serif; 
             margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; 
         }
 
-        header { height: 60px; display: flex; align-items: center; justify-content: center; background: #000; border-bottom: 1px solid #333; flex-shrink: 0; }
-        .brand-title { color: var(--brand-red); font-weight: 900; letter-spacing: 1px; font-size: 1.2rem; }
+        /* [모바일 최적화] */
+        @media (max-width: 768px) {
+            body { height: auto; overflow-y: auto; }
+            .main-wrapper { flex-direction: column; height: auto !important; }
+            .panel-left { height: 200px !important; border-bottom: 1px solid #333; }
+            .panel-center { height: 450px !important; border-bottom: 1px solid #333; }
+            .panel-right { height: auto !important; padding-bottom: 50px; }
+            h1, h2, h3, p, span, div, button { word-break: keep-all; word-wrap: break-word; }
+            .nav-footer { position: relative !important; margin-top: 20px; }
+        }
 
-        .main-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: radial-gradient(circle at center, #222 0%, #000 80%); }
+        header { height: 50px; display: flex; align-items: center; justify-content: center; background: #000; border-bottom: 1px solid #333; flex-shrink: 0; }
+        .brand-title { color: var(--brand-red); font-weight: 900; letter-spacing: 1px; font-size: 1.1rem; }
 
-        canvas { filter: drop-shadow(0 0 30px rgba(255, 68, 68, 0.2)); cursor: grab; }
-        canvas:active { cursor: grabbing; }
+        .main-wrapper { display: flex; flex: 1; height: calc(100vh - 120px); width: 100%; }
 
-        .info-box { position: absolute; bottom: 100px; text-align: center; width: 80%; pointer-events: none; }
-        .info-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 10px; color: #fff; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        .info-desc { font-size: 0.9rem; color: #aaa; line-height: 1.5; }
+        /* 3단 레이아웃 */
+        .panel-left { flex: 1.2; background: var(--panel-l); border-right: 1px solid #333; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .panel-center { flex: 2.2; background: radial-gradient(circle at center, #222 0%, #000 90%); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .panel-right { flex: 1.4; background: var(--panel-r); border-left: 1px solid #333; padding: 25px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; }
 
-        /* [핵심: 다음 단계로 가는 버튼] */
+        .panel-badge { position: absolute; top: 15px; left: 15px; font-size: 0.7rem; font-weight: bold; color: #666; border: 1px solid #333; padding: 4px 10px; border-radius: 4px; background: rgba(0,0,0,0.5); letter-spacing: 1px; z-index: 5; }
+
+        canvas { max-width: 100%; max-height: 100%; filter: drop-shadow(0 0 30px rgba(255, 68, 68, 0.1)); }
+
+        /* 컨트롤 UI */
+        .part-list { width: 100%; margin-bottom: 20px; }
+        .part-item { 
+            display: flex; justify-content: space-between; padding: 14px; margin-bottom: 8px;
+            background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid #333;
+            cursor: pointer; transition: 0.2s; font-size: 0.9rem;
+        }
+        .part-item:hover { background: rgba(255,255,255,0.08); border-color: #555; }
+        .part-item.active { border-color: var(--brand-red); background: rgba(255, 68, 68, 0.1); color: var(--brand-red); font-weight: bold; }
+
+        .slider-box { width: 100%; background: #111; padding: 20px; border-radius: 12px; border: 1px solid #333; text-align: center; margin-bottom: 20px; }
+        input[type=range] { width: 100%; margin: 15px 0; accent-color: var(--brand-red); cursor: pointer; }
+
+        /* 하단 내비게이션 */
         .nav-footer { 
-            height: 80px; background: #000; border-top: 1px solid #333; flex-shrink: 0;
+            height: 70px; background: #000; border-top: 1px solid #333; flex-shrink: 0;
             display: flex; justify-content: space-between; align-items: center; padding: 0 30px;
         }
-        
         .nav-btn { 
             text-decoration: none; color: #888; font-size: 0.9rem; font-weight: bold; 
-            padding: 12px 24px; border-radius: 8px; transition: 0.3s; border: 1px solid transparent;
+            display: flex; align-items: center; gap: 10px; transition: 0.3s; padding: 10px 20px; border-radius: 8px;
         }
-        .nav-btn:hover { background: #222; color: #fff; }
-
-        /* 다음 단계 강조 버튼 */
+        .nav-btn:hover { color: white; background: #222; }
+        
+        /* NEXT 버튼 강조 */
         .nav-btn.next { 
             background: rgba(255, 68, 68, 0.15); color: var(--brand-red); border: 1px solid var(--brand-red); 
             box-shadow: 0 0 15px rgba(255, 68, 68, 0.2);
@@ -46,29 +73,83 @@
             box-shadow: 0 0 25px rgba(255, 68, 68, 0.5);
         }
 
+        /* 팝업 모달 */
+        #info-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(5px); opacity: 0; transition: 0.3s; }
+        #info-modal.show { opacity: 1; }
+        .modal-box { width: 90%; max-width: 400px; background: #1a1a1a; border: 1px solid #444; border-radius: 15px; padding: 30px; box-shadow: 0 0 50px rgba(0,0,0,0.8); transform: scale(0.9); transition: 0.3s; }
+        #info-modal.show .modal-box { transform: scale(1); }
     </style>
 </head>
 <body>
+
+    <div id="info-modal" onclick="closeModal(event)">
+        <div class="modal-box">
+            <h2 id="m-title" style="color:var(--brand-red); margin-top:0;">Title</h2>
+            <div style="font-size:0.75rem; color:#666; margin-bottom:15px; font-weight:bold;">ENGINEERING DEF.</div>
+            <p id="m-eng" style="color:#ccc; font-size:0.9rem; line-height:1.6; margin-bottom:25px; border-left:3px solid #444; padding-left:15px;">...</p>
+            <div style="font-size:0.75rem; color:var(--brand-gold); margin-bottom:15px; font-weight:bold;">VIBE CHECK (EASY MODE)</div>
+            <p id="m-vibe" style="color:#fff; font-size:1.05rem; font-weight:bold; line-height:1.5;">...</p>
+            <button onclick="closeModalBtn()" style="width:100%; padding:12px; margin-top:20px; background:#333; border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold;">닫기 (Close)</button>
+        </div>
+    </div>
 
     <header>
         <div class="brand-title">DREAM-FI MECHANICS | 01</div>
     </header>
 
-    <div class="main-container" id="canvas-container">
-        <canvas id="engineCanvas" width="400" height="400"></canvas>
-        
-        <div class="info-box">
-            <div class="info-title">V4 Engine Block</div>
-            <div class="info-desc">
-                자동차의 심장입니다.<br>
-                이제 이 심장을 차체에 연결하러 가볼까요?
+    <div class="main-wrapper">
+        <div class="panel-left">
+            <div class="panel-badge">LOCATION MAP</div>
+            <canvas id="navCanvas" width="200" height="300"></canvas>
+            <div style="margin-top:15px; font-size:0.8rem; color:#555; text-align:center;">
+                현재 <span style="color:#ff4444; font-weight:bold;">엔진룸 (Engine Bay)</span><br>내부입니다.
+            </div>
+        </div>
+
+        <div class="panel-center" id="main-container">
+            <div class="panel-badge" style="color:var(--brand-red);">ENGINE VIEW</div>
+            <canvas id="mainCanvas" width="600" height="600"></canvas>
+            <div style="position:absolute; bottom:20px; font-size:0.8rem; color:rgba(255,255,255,0.3);">
+                * 슬라이더를 당겨 RPM을 올려보세요!
+            </div>
+        </div>
+
+        <div class="panel-right">
+            <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0;">🔥 심장의 구조</h3>
+                <span style="font-size:0.8rem; color:#666;">Step 1/5</span>
+            </div>
+
+            <div class="slider-box">
+                <label style="font-size:0.85rem; color:var(--brand-red); font-weight:bold;">RPM ACCELERATOR</label>
+                <input type="range" id="rpmRange" min="1" max="10" value="1" step="0.1">
+                <div id="statusText" style="font-size:0.9rem; font-weight:bold; color:#888;">공회전 (Idling)</div>
+            </div>
+
+            <div class="part-list">
+                <div class="part-item" onclick="showInfo(1)">
+                    <span>1. 실린더 (Cylinder)</span> <span style="opacity:0.5">ℹ️</span>
+                </div>
+                <div class="part-item" onclick="showInfo(2)">
+                    <span>2. 피스톤 (Piston)</span> <span style="opacity:0.5">ℹ️</span>
+                </div>
+                <div class="part-item" onclick="showInfo(3)">
+                    <span>3. 점화플러그 (Spark Plug)</span> <span style="opacity:0.5">ℹ️</span>
+                </div>
+                <div class="part-item" onclick="showInfo(4)">
+                    <span>4. 크랭크축 (Crankshaft)</span> <span style="opacity:0.5">ℹ️</span>
+                </div>
+            </div>
+            
+            <div style="font-size:0.8rem; color:#444; line-height:1.4; text-align:center; margin-top:auto;">
+                * 4행정(흡입-압축-폭발-배기)이<br>반복되며 힘을 만듭니다.
             </div>
         </div>
     </div>
 
     <footer class="nav-footer">
         <a href="../index.html" class="nav-btn">
-            🏠 홈으로 (Home)
+            ◀ 목차로 (Menu)
         </a>
         
         <a href="./1-1-assembly/index.html" class="nav-btn next">
@@ -77,86 +158,110 @@
     </footer>
 
     <script>
-        const canvas = document.getElementById('engineCanvas');
-        const ctx = canvas.getContext('2d');
-        const container = document.getElementById('canvas-container');
+        // [데이터]
+        const partsInfo = {
+            1: { t: "실린더 (Cylinder)", e: "피스톤이 왕복 운동을 하는 원통형 공간. 엔진의 배기량(cc)을 결정하는 기준.", v: "\"폭발이 일어나는 방\"\n이 튼튼한 금속 방 안에서 기름이 터지면서 엄청난 힘이 생깁니다. 주사기 통이라고 생각하면 됩니다." },
+            2: { t: "피스톤 (Piston)", e: "실린더 내부에서 폭발 압력을 받아 직선 왕복 운동을 하는 부품.", v: "\"지치지 않는 펀치\"\n폭발할 때마다 '꽝!' 하고 아래로 밀려나면서 힘을 전달합니다. 1분에 수천 번씩 펀치를 날립니다." },
+            3: { t: "점화플러그 (Spark Plug)", e: "압축된 혼합기에 전기 불꽃을 일으켜 연소(폭발)를 유도하는 장치.", v: "\"라이터 부싯돌\"\n가만히 있는 기름에 불을 '탁!' 켜주는 녀석입니다. 이 불꽃이 없으면 엔진은 그냥 차가운 쇳덩어리입니다." },
+            4: { t: "크랭크축 (Crankshaft)", e: "피스톤의 직선 운동을 회전 운동으로 변환하여 바퀴로 전달하는 축.", v: "\"자전거 페달\"\n피스톤이 발로 밟는 힘이라면, 크랭크축은 그 힘으로 뱅글뱅글 돌아가는 페달입니다." }
+        };
+
+        // [팝업 로직]
+        const modal = document.getElementById('info-modal');
+        function showInfo(id) {
+            const d = partsInfo[id];
+            document.getElementById('m-title').innerText = d.t;
+            document.getElementById('m-eng').innerText = d.e;
+            document.getElementById('m-vibe').innerText = d.v;
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+        function closeModal(e) { if(e.target === modal) closeModalBtn(); }
+        function closeModalBtn() { modal.classList.remove('show'); setTimeout(() => modal.style.display = 'none', 300); }
+
+        // [1. 내비게이터]
+        const navCanvas = document.getElementById('navCanvas');
+        const navCtx = navCanvas.getContext('2d');
+        function drawNavigator() {
+            navCtx.clearRect(0, 0, 200, 300);
+            const cx = 100, cy = 150;
+            navCtx.strokeStyle = "#444"; navCtx.lineWidth = 2;
+            navCtx.strokeRect(cx - 40, cy - 80, 80, 160); // 차체
+            
+            // 엔진룸 강조 (빨간색 깜빡임)
+            const alpha = (Math.sin(Date.now() / 200) + 1) / 2;
+            navCtx.fillStyle = `rgba(255, 68, 68, ${alpha * 0.5})`;
+            navCtx.fillRect(cx - 38, cy - 78, 76, 50);
+            
+            navCtx.fillStyle = "#333"; // 바퀴
+            navCtx.fillRect(cx - 70, cy - 75, 20, 30); navCtx.fillRect(cx + 50, cy - 75, 20, 30);
+            navCtx.fillRect(cx - 70, cy + 45, 20, 30); navCtx.fillRect(cx + 50, cy + 45, 20, 30);
+            
+            requestAnimationFrame(drawNavigator);
+        }
+        drawNavigator();
+
+        // [2. 메인 엔진 애니메이션]
+        const mainCanvas = document.getElementById('mainCanvas');
+        const ctx = mainCanvas.getContext('2d');
+        const rpmRange = document.getElementById('rpmRange');
+        const statusText = document.getElementById('statusText');
 
         let angle = 0;
-        let isDragging = false;
-        let lastX = 0;
+        let speed = 0.1;
 
-        // 마우스 인터랙션
-        container.addEventListener('mousedown', e => { isDragging = true; lastX = e.clientX; });
-        window.addEventListener('mouseup', () => isDragging = false);
-        container.addEventListener('mousemove', e => {
-            if(isDragging) {
-                const delta = e.clientX - lastX;
-                angle += delta * 0.01;
-                lastX = e.clientX;
-            }
-        });
-
-        // 엔진 드로잉 (간단한 3D 와이어프레임)
-        function drawEngine() {
-            ctx.clearRect(0, 0, 400, 400);
-            const cx = 200, cy = 200;
+        function drawPiston(x, y, offset) {
+            const pistonY = Math.sin(angle + offset) * 50;
             
-            // 자동 회전 (드래그 안 할 때)
-            if(!isDragging) angle += 0.005;
-
-            ctx.save();
-            ctx.translate(cx, cy);
-            
-            // 3D 효과를 위한 변환
-            const scale = 100;
-            
-            // 큐브 점들 계산
-            const points = [];
-            [ -1, 1 ].forEach(x => {
-                [ -1.2, 1.2 ].forEach(y => {
-                    [ -1, 1 ].forEach(z => {
-                        // 회전 적용
-                        const rx = x * Math.cos(angle) - z * Math.sin(angle);
-                        const rz = x * Math.sin(angle) + z * Math.cos(angle);
-                        points.push({ x: rx, y: y, z: rz });
-                    });
-                });
-            });
-
-            // 엔진 블록 그리기
-            ctx.strokeStyle = "#ff4444";
+            // 실린더
+            ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+            ctx.fillRect(x - 30, y - 100, 60, 200);
+            ctx.strokeStyle = "#444";
             ctx.lineWidth = 2;
-            ctx.lineJoin = "round";
+            ctx.strokeRect(x - 30, y - 100, 60, 200);
+
+            // 점화플러그 (위) & 폭발 효과
+            ctx.fillStyle = "#888"; ctx.fillRect(x-5, y-110, 10, 10);
             
-            ctx.beginPath();
-            // 윗면, 아랫면 연결
-            for(let i=0; i<4; i++) {
-                const p1 = points[i];
-                const p2 = points[i+4];
-                ctx.moveTo(p1.x * scale, p1.y * scale);
-                ctx.lineTo(p2.x * scale, p2.y * scale);
+            // 폭발 타이밍 (피스톤이 맨 위에 있을 때)
+            if (Math.sin(angle + offset) < -0.9) {
+                ctx.fillStyle = `rgba(255, 68, 68, ${Math.random()})`; 
+                ctx.beginPath(); ctx.arc(x, y - 80, 25, 0, Math.PI * 2); ctx.fill();
             }
-            // 옆면 연결
-            ctx.moveTo(points[0].x*scale, points[0].y*scale); ctx.lineTo(points[1].x*scale, points[1].y*scale);
-            ctx.lineTo(points[3].x*scale, points[3].y*scale); ctx.lineTo(points[2].x*scale, points[2].y*scale);
-            ctx.lineTo(points[0].x*scale, points[0].y*scale);
 
-            ctx.moveTo(points[4].x*scale, points[4].y*scale); ctx.lineTo(points[5].x*scale, points[5].y*scale);
-            ctx.lineTo(points[7].x*scale, points[7].y*scale); ctx.lineTo(points[6].x*scale, points[6].y*scale);
-            ctx.lineTo(points[4].x*scale, points[4].y*scale);
-            
-            ctx.stroke();
+            // 커넥팅 로드
+            ctx.strokeStyle = "#888"; ctx.lineWidth = 10;
+            ctx.beginPath(); ctx.moveTo(x, y + pistonY); ctx.lineTo(x, y + 160); ctx.stroke();
 
-            // 내부 피스톤 (원) 표현
-            ctx.fillStyle = "rgba(255, 68, 68, 0.1)";
-            ctx.beginPath();
-            ctx.arc(0, -40, 30 * Math.abs(Math.sin(angle)), 0, Math.PI*2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(0, 40, 30 * Math.abs(Math.cos(angle)), 0, Math.PI*2);
-            ctx.fill();
+            // 피스톤 헤드
+            ctx.fillStyle = "#ccc"; ctx.fillRect(x - 28, y + pistonY - 20, 56, 50);
+            ctx.fillStyle = "#999"; ctx.fillRect(x - 28, y + pistonY, 56, 10); // 링
+        }
 
-            ctx.restore();
+        function drawEngine() {
+            ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+            const cx = mainCanvas.width / 2;
+            const cy = mainCanvas.height / 2 - 50;
+
+            // 크랭크 축 (아래)
+            ctx.strokeStyle = "#333"; ctx.lineWidth = 20; ctx.lineCap = "round";
+            ctx.beginPath(); ctx.moveTo(cx - 150, cy + 160); ctx.lineTo(cx + 150, cy + 160); ctx.stroke();
+
+            // 피스톤 4개 (직렬 4기통)
+            drawPiston(cx - 100, cy, 0);          // 1
+            drawPiston(cx - 35, cy, Math.PI);     // 2
+            drawPiston(cx + 35, cy, Math.PI);     // 3
+            drawPiston(cx + 100, cy, 0);          // 4
+
+            // 속도 제어
+            speed = parseFloat(rpmRange.value) * 0.05;
+            angle += speed;
+
+            // 텍스트 업데이트
+            if(rpmRange.value < 2) { statusText.innerText = "공회전 (Idling)"; statusText.style.color="#888"; }
+            else if(rpmRange.value < 7) { statusText.innerText = "주행 중 (Cruising) 🚗"; statusText.style.color="white"; }
+            else { statusText.innerText = "풀 악셀! (Full Throttle) 🔥"; statusText.style.color="var(--brand-red)"; }
+
             requestAnimationFrame(drawEngine);
         }
         drawEngine();
