@@ -2,119 +2,108 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dream-Fi Assembly Protocol</title>
+    <title>Dream-Fi | Interactive Assembly</title>
     <style>
-        :root { --red: #ff3333; --blue: #00d2ff; --bg: #05070a; --glass: rgba(255, 255, 255, 0.05); }
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        :root { --red: #ff3333; --blue: #00d2ff; --bg: #05070a; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
         
-        /* 헤더: 마이너리티 리포트 스타일 */
-        header { height: 60px; border-bottom: 1px solid #1a202c; display: flex; align-items: center; justify-content: center; background: #000; font-weight: 900; letter-spacing: 3px; color: var(--red); text-shadow: 0 0 10px var(--red); }
+        header { height: 60px; border-bottom: 1px solid #222; display: flex; align-items: center; justify-content: center; font-weight: 900; letter-spacing: 3px; color: var(--red); background: #000; }
 
-        .container { display: flex; flex: 1; overflow: hidden; }
+        /* 작업 공간 */
+        .workspace { position: relative; width: 100vw; height: calc(100vh - 130px); background-image: radial-gradient(#1a1a1a 1px, transparent 1px); background-size: 40px 40px; }
+
+        /* 엔진 코어 */
+        .engine-core { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; z-index: 10; transition: 0.5s; }
+        .engine-core.complete { filter: drop-shadow(0 0 30px var(--red)); }
+
+        /* 드래그 가능한 부품 */
+        .part { position: absolute; width: 80px; height: 80px; cursor: grab; z-index: 20; display: flex; flex-direction: column; align-items: center; }
+        .part:active { cursor: grabbing; }
         
-        /* 왼쪽 패널: 부품 정보 */
-        .left-panel { width: 300px; background: #080808; border-right: 1px solid #222; padding: 25px; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
-        .p-title { font-size: 0.8rem; color: #555; text-transform: uppercase; margin-bottom: 20px; border-left: 3px solid var(--red); padding-left: 10px; }
-        .part-card { padding: 15px; background: #111; border: 1px solid #222; border-radius: 4px; margin-bottom: 15px; transition: 0.4s; }
-        .part-card.active { border-color: var(--red); background: #1a0505; transform: translateX(10px); }
-        .part-card h4 { margin: 0 0 5px 0; font-size: 0.9rem; }
-        .part-card p { margin: 0; font-size: 0.75rem; color: #666; }
+        /* 말풍선 */
+        .bubble { position: absolute; top: -50px; background: white; color: black; padding: 5px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; opacity: 0; transition: 0.3s; border: 2px solid var(--red); pointer-events: none; }
+        .part:hover .bubble { opacity: 1; top: -60px; }
 
-        /* 중앙 작업대: 홀로그램 그리드 */
-        .workspace { flex: 1; position: relative; background: radial-gradient(circle at center, #111 0%, #000 100%); display: flex; justify-content: center; align-items: center; }
-        .workspace::before { content: ''; position: absolute; width: 100%; height: 100%; background-image: linear-gradient(#1a1a1a 1px, transparent 1px), linear-gradient(90deg, #1a1a1a 1px, transparent 1px); background-size: 50px 50px; opacity: 0.3; }
+        /* 도킹 지점 가이드 */
+        .target-slot { position: absolute; width: 80px; height: 80px; border: 2px dashed #333; border-radius: 10px; z-index: 5; }
 
-        /* 엔진 코어 (SVG) */
-        .core { width: 220px; z-index: 10; filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.1)); transition: 0.5s; }
-        .core.complete { filter: drop-shadow(0 0 30px var(--red)); transform: scale(1.05); }
-
-        /* 부품 및 말풍선 */
-        .part { position: absolute; width: 100px; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.1s linear; }
-        
-        .bubble { 
-            position: absolute; top: -50px; background: white; color: black; padding: 6px 12px; border-radius: 20px; 
-            font-size: 0.8rem; font-weight: bold; white-space: nowrap; opacity: 0; transition: 0.3s; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); border: 2px solid var(--red);
-        }
-        .bubble::after { content:''; position:absolute; bottom:-8px; left:50%; margin-left:-8px; border-width:8px 8px 0; border-style:solid; border-color:var(--red) transparent transparent; }
-        
-        .part.moving .bubble { opacity: 1; top: -70px; }
-        .part.docked { opacity: 0.2; transform: scale(0.8); transition: 0.5s; }
-
-        /* 오른쪽 패널: 컨트롤 */
-        .right-panel { width: 320px; background: #080808; border-left: 1px solid #222; padding: 30px; display: flex; flex-direction: column; justify-content: center; }
-        .slider-wrap { text-align: center; }
-        input[type="range"] { width: 100%; height: 4px; background: #333; accent-color: var(--red); cursor: pointer; }
-        .status { font-size: 1.8rem; font-weight: 900; color: var(--red); margin: 20px 0 5px; letter-spacing: 2px; }
-
-        /* 하단 푸터 */
-        footer { height: 70px; background: #000; border-top: 1px solid #222; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; }
-        .next-btn { 
-            background: #222; color: #444; padding: 15px 35px; border-radius: 50px; text-decoration: none; 
-            font-weight: bold; pointer-events: none; transition: 0.5s; border: 1px solid #333; text-transform: uppercase;
-        }
-        .next-btn.active { 
-            background: var(--red); color: white; pointer-events: auto; box-shadow: 0 0 30px var(--red); border-color: var(--red);
-        }
+        footer { height: 70px; background: #000; border-top: 1px solid #222; display: flex; justify-content: center; align-items: center; }
+        .next-btn { background: #222; color: #444; padding: 15px 40px; border-radius: 50px; text-decoration: none; font-weight: bold; pointer-events: none; transition: 0.5s; }
+        .next-btn.active { background: var(--red); color: white; pointer-events: auto; box-shadow: 0 0 30px var(--red); }
     </style>
 </head>
 <body>
-    <header>V8 ASSEMBLY PROTOCOL v1.0</header>
-    <div class="container">
-        <div class="left-panel">
-            <div class="p-title">System Status</div>
-            <div class="part-card" id="c1"><h4>Transmission</h4><p>동력을 바퀴로 전달</p></div>
-            <div class="part-card" id="c2"><h4>Engine Mount</h4><p>진동 흡수 및 고정</p></div>
-            <div class="part-card" id="c3"><h4>Cooling Sys</h4><p>엔진 온도 최적화</p></div>
-            <div class="part-card" id="c4"><h4>Exhaust</h4><p>연소 가스 배출</p></div>
+    <header>V8 INTERACTIVE ASSEMBLY</header>
+    <div class="workspace" id="ws">
+        <div class="engine-core" id="core">
+            <svg viewBox="0 0 200 200"><rect x="50" y="40" width="100" height="120" rx="10" fill="#333" stroke="#666"/><text x="100" y="110" text-anchor="middle" fill="#555" font-weight="bold">CORE</text></svg>
         </div>
 
-        <div class="workspace">
-            <div class="core" id="core">
-                <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M40 60h120l20 140H20L40 60z" fill="#333" stroke="#666" stroke-width="2"/>
-                    <rect x="35" y="30" width="130" height="30" rx="5" fill="#cc0000"/>
-                    <text x="100" y="150" text-anchor="middle" fill="#555" font-weight="bold" font-size="24">CORE</text>
-                </svg>
-            </div>
+        <div class="target-slot" style="top:50%; left:calc(50% + 100px); transform:translate(-50%,-50%);" data-part="p1"></div>
+        <div class="target-slot" style="top:calc(50% + 110px); left:50%; transform:translate(-50%,-50%);" data-part="p2"></div>
+        <div class="target-slot" style="top:50%; left:calc(50% - 100px); transform:translate(-50%,-50%);" data-part="p3"></div>
+        <div class="target-slot" style="top:calc(50% - 110px); left:50%; transform:translate(-50%,-50%);" data-part="p4"></div>
 
-            <div class="part" id="p1"><div class="bubble">변속기 도킹 중!</div><svg width="80" height="80" viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" fill="#222" stroke="#888" stroke-width="2"/><path d="M50 15v70M15 50h70" stroke="#444" stroke-width="4"/></svg></div>
-            <div class="part" id="p2"><div class="bubble">마운트 고정!</div><svg width="80" height="80" viewBox="0 0 100 100"><rect x="20" y="40" width="60" height="20" fill="#444" stroke="#888"/></svg></div>
-            <div class="part" id="p3"><div class="bubble">냉각수 순환!</div><svg width="80" height="80" viewBox="0 0 100 100"><path d="M50 10 Q85 55 85 75 A35 35 0 0 1 15 75 Q15 55 50 10" fill="#00aaff"/></svg></div>
-            <div class="part" id="p4"><div class="bubble">배기 시스템!</div><svg width="80" height="80" viewBox="0 0 100 100"><path d="M10 50 Q50 10 90 50" fill="none" stroke="#ffcc00" stroke-width="10"/></svg></div>
+        <div class="part" id="p1" style="top:100px; left:100px;">
+            <div class="bubble">변속기: 동력 전달</div>
+            <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" fill="#444" stroke="#888"/></svg>
         </div>
-
-        <div class="right-panel">
-            <div class="slider-wrap">
-                <div class="status" id="st">READY</div>
-                <div class="guide">SLIDE TO ASSEMBLE</div>
-                <input type="range" min="0" max="100" value="0" id="sd">
-            </div>
+        <div class="part" id="p2" style="top:100px; right:100px;">
+            <div class="bubble">마운트: 진동 흡수</div>
+            <svg viewBox="0 0 100 100"><rect x="20" y="40" width="60" height="20" fill="#444" stroke="#888"/></svg>
+        </div>
+        <div class="part" id="p3" style="bottom:100px; left:100px;">
+            <div class="bubble">냉각수: 열 식히기</div>
+            <svg viewBox="0 0 100 100"><path d="M50 20 Q80 60 80 80 A30 30 0 0 1 20 80 Q20 60 50 20" fill="#00aaff"/></svg>
+        </div>
+        <div class="part" id="p4" style="bottom:100px; right:100px;">
+            <div class="bubble">배기구: 가스 배출</div>
+            <svg viewBox="0 0 100 100"><path d="M20 50 Q50 10 80 50" fill="none" stroke="#ffcc00" stroke-width="10"/></svg>
         </div>
     </div>
     <footer>
-        <a href="../../index.html" style="color:#444; text-decoration:none;">🏠 MENU</a>
-        <a href="../1-2-detail/index.html" class="next-btn" id="nb">▶ 엔진 입체 영상 보기 (3D View)</a>
+        <a href="../1-2-detail/index.html" class="next-btn" id="nextBtn">▶ 엔진 입체 영상 보기 (3D View)</a>
     </footer>
 
     <script>
-        const sd = document.getElementById('sd'), st = document.getElementById('st'), nb = document.getElementById('nb'), core = document.getElementById('core');
-        const ps = [document.getElementById('p1'), document.getElementById('p2'), document.getElementById('p3'), document.getElementById('p4')];
-        const cs = [document.getElementById('c1'), document.getElementById('c2'), document.getElementById('c3'), document.getElementById('c4')];
-        const sp = [{x:250,y:0},{x:0,y:200},{x:-250,y:0},{x:0,y:-200}], ep = [{x:80,y:0},{x:0,y:100},{x:-80,y:0},{x:0,y:-100}];
+        let dockedCount = 0;
+        const nextBtn = document.getElementById('nextBtn');
+        const core = document.getElementById('core');
 
-        sd.addEventListener('input', (e) => {
-            const v = parseInt(e.target.value), r = v/100;
-            st.innerText = v < 10 ? "READY" : v < 95 ? "DOCKING..." : "COMPLETE";
-            ps.forEach((p, i) => {
-                p.style.transform = `translate(${sp[i].x+(ep[i].x-sp[i].x)*r}px, ${sp[i].y+(ep[i].y-sp[i].y)*r}px)`;
-                if(v > 5 && v < 95) p.classList.add('moving'); else p.classList.remove('moving');
-                if(v > 95) { p.classList.add('docked'); cs[i].classList.add('active'); } 
-                else { p.classList.remove('docked'); cs[i].classList.remove('active'); }
+        document.querySelectorAll('.part').forEach(part => {
+            let isDragging = false;
+            part.addEventListener('mousedown', e => { isDragging = true; part.style.zIndex = 100; });
+            
+            document.addEventListener('mousemove', e => {
+                if (!isDragging) return;
+                part.style.left = (e.clientX - 40) + 'px';
+                part.style.top = (e.clientY - 100) + 'px';
             });
-            if(v === 100) { core.classList.add('complete'); nb.classList.add('active'); } 
-            else { core.classList.remove('complete'); nb.classList.remove('active'); }
+
+            document.addEventListener('mouseup', e => {
+                if (!isDragging) return;
+                isDragging = false;
+                
+                // 도킹 체크
+                const target = document.querySelector(`.target-slot[data-part="${part.id}"]`);
+                const tRect = target.getBoundingClientRect();
+                const pRect = part.getBoundingClientRect();
+                
+                const dist = Math.hypot(tRect.left - pRect.left, tRect.top - pRect.top);
+                
+                if (dist < 50) { // 근처에 가면 자석처럼 붙음
+                    part.style.left = tRect.left + 'px';
+                    part.style.top = tRect.top + 'px';
+                    part.style.pointerEvents = 'none';
+                    part.style.zIndex = 5;
+                    target.style.borderColor = '#ff4d4d';
+                    dockedCount++;
+                    if(dockedCount === 4) {
+                        core.classList.add('complete');
+                        nextBtn.classList.add('active');
+                    }
+                }
+            });
         });
     </script>
 </body>
