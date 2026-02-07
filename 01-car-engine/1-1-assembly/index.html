@@ -3,161 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dream-Fi Mechanics | 1-1</title>
+    <title>Dream-Fi Mechanics | 1-1 Assembly</title>
     <style>
-        /* --- 1. 기본 스타일 (다크 모드 & 엔지니어링 감성) --- */
+        /* --- 1. 전체 테마: 하이테크 엔지니어링 --- */
+        :root {
+            --primary-color: #ff3333; /* 강렬한 레드 */
+            --bg-color: #080a10;      /* 아주 깊은 남색/검정 */
+            --panel-bg: #11141d;      /* 패널 배경 */
+            --text-color: #e0e6ff;    /* 차가운 흰색 텍스트 */
+        }
+
         body {
-            background-color: #0b0b0b; color: #e0e0e0; 
-            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color); color: var(--text-color); 
+            font-family: 'Rajdhani', 'Segoe UI', sans-serif;
             margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
         
-        /* 상단 헤더 */
+        /* 헤더 */
         header {
-            height: 50px; border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: center;
-            background: #111; z-index: 10; letter-spacing: 1px; font-weight: bold; color: #ff4d4d;
+            height: 60px; border-bottom: 2px solid #222838; display: flex; align-items: center; justify-content: center;
+            background: #0c0f18; z-index: 10; letter-spacing: 2px; font-weight: 800; color: var(--primary-color);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5); font-size: 1.2rem;
         }
 
         .main-container { display: flex; flex: 1; height: 100%; }
 
-        /* --- 2. 왼쪽: 부품 정보 패널 --- */
+        /* --- 2. 왼쪽 패널: 부품 상태 모니터 --- */
         .info-panel {
-            width: 280px; border-right: 1px solid #333; background: #111;
-            padding: 20px; display: flex; flex-direction: column; gap: 15px;
+            width: 300px; border-right: 2px solid #222838; background: var(--panel-bg);
+            padding: 25px; display: flex; flex-direction: column; gap: 20px;
+            box-shadow: 5px 0 20px rgba(0,0,0,0.3); z-index: 5;
         }
-        .panel-title { font-size: 0.9rem; color: #888; border-bottom: 2px solid #ff4d4d; padding-bottom: 5px; margin-bottom: 10px; }
+        .panel-title { font-size: 1rem; color: #8a95b3; text-transform: uppercase; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 10px; font-weight: bold;}
         
         .part-card {
-            background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #333;
-            display: flex; align-items: center; gap: 10px; transition: 0.3s;
+            background: #1a1f2e; padding: 15px; border-radius: 12px; border: 1px solid #333a50;
+            display: flex; align-items: center; gap: 15px; transition: 0.4s;
         }
-        .part-card.active { border-color: #ff4d4d; background: #220a0a; }
+        .part-card.active { 
+            border-color: var(--primary-color); background: linear-gradient(135deg, #2a0a0a, #1a1f2e);
+            transform: translateX(10px); box-shadow: -5px 5px 15px rgba(255, 51, 51, 0.2);
+        }
         .part-icon { font-size: 1.5rem; }
-        .part-info h4 { margin: 0; font-size: 0.9rem; color: #fff; }
-        .part-info p { margin: 3px 0 0 0; font-size: 0.75rem; color: #888; }
+        .part-info h4 { margin: 0; font-size: 0.95rem; color: #fff; font-weight: bold; }
+        .part-info p { margin: 5px 0 0 0; font-size: 0.75rem; color: #8a95b3; }
 
-        /* --- 3. 중앙: 조립 작업대 (Grid 배경) --- */
+        /* --- 3. 중앙 작업 공간: 블루프린트 스타일 --- */
         .workspace {
-            flex: 1; position: relative; background: #000;
-            background-image: radial-gradient(#333 1px, transparent 1px);
-            background-size: 30px 30px; /* 점선 그리드 패턴 */
+            flex: 1; position: relative; background: var(--bg-color);
+            /* 정교한 그리드 패턴 */
+            background-image: 
+                linear-gradient(rgba(40, 50, 80, 0.2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(40, 50, 80, 0.2) 1px, transparent 1px);
+            background-size: 50px 50px;
             display: flex; justify-content: center; align-items: center; overflow: hidden;
+            perspective: 1000px;
         }
+        /* 중앙 타겟 표시 */
+        .workspace::after {
+            content: ''; position: absolute; width: 300px; height: 300px;
+            border: 2px dashed rgba(255, 51, 51, 0.3); border-radius: 50%;
+            pointer-events: none; animation: pulse-target 3s infinite;
+        }
+        @keyframes pulse-target { 0% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.05); } 100% { opacity: 0.3; transform: scale(1); } }
 
-        /* 중앙 엔진 본체 (CORE) */
+
+        /* ★ 중앙 엔진 본체 (SVG 그래픽) ★ */
         .engine-core {
-            width: 180px; height: 240px; 
-            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-            border: 2px solid #444; border-radius: 10px;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 10; position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 200px; height: 200px; z-index: 20; position: relative;
+            transition: 0.5s; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.7));
+            display: flex; justify-content: center; align-items: center;
         }
-        .core-label { margin-top: 10px; font-size: 0.8rem; font-weight: bold; color: #666; letter-spacing: 1px; }
+        /* 도킹 완료 시 효과 */
+        .engine-core.complete {
+            filter: drop-shadow(0 0 40px var(--primary-color));
+            animation: engine-rumble 0.2s infinite alternate;
+        }
+        @keyframes engine-rumble { from { transform: translateY(0px); } to { transform: translateY(-2px); } }
 
-        /* 부품 스타일 (이미지 대신 CSS로 디자인) */
+
+        /* ★ 움직이는 부품들 (SVG 그래픽) ★ */
         .part {
-            position: absolute; width: 100px; height: 80px;
-            background: rgba(30, 30, 30, 0.9); border: 1px solid #555; border-radius: 8px;
+            position: absolute; width: 100px; height: 100px;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            cursor: pointer; z-index: 20; transition: transform 0.1s linear;
-            backdrop-filter: blur(5px);
+            cursor: grab; z-index: 30; transition: transform 0.1s linear;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
         }
-        .part-name { font-size: 0.8rem; font-weight: bold; margin-top: 5px; color: #ccc; }
+        .part:active { cursor: grabbing; }
         
-        /* ★ 말풍선 (Speech Bubble) ★ */
+        .part-name { 
+            position: absolute; bottom: -30px; width: 140px; text-align: center;
+            font-size: 0.8rem; font-weight: bold; margin-top: 10px; color: var(--text-color); 
+            background: rgba(0,0,0,0.8); padding: 4px 0; border-radius: 4px; border: 1px solid #333;
+        }
+
+        /* ★ 말풍선 복구 및 디자인 강화 ★ */
         .speech-bubble {
-            position: absolute; top: -45px; left: 50%; transform: translateX(-50%);
-            background: white; color: black; padding: 5px 10px; border-radius: 5px;
-            font-size: 0.75rem; font-weight: bold; white-space: nowrap;
-            opacity: 0; transition: 0.3s; pointer-events: none;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            position: absolute; top: -70px; left: 50%; transform: translateX(-50%) scale(0.8);
+            background: linear-gradient(135deg, #fff, #e0e6ff); color: #080a10;
+            padding: 8px 15px; border-radius: 15px 15px 15px 0;
+            font-size: 0.8rem; font-weight: 800; white-space: nowrap;
+            opacity: 0; transition: 0.3s;
+            pointer-events: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border: 2px solid var(--primary-color); z-index: 100;
         }
+        /* 말풍선 꼬리 */
         .speech-bubble::after {
-            content: ""; position: absolute; bottom: -5px; left: 50%; margin-left: -5px;
-            border-width: 5px; border-style: solid; border-color: white transparent transparent transparent;
+            content: ''; position: absolute; bottom: -8px; left: 0;
+            border-width: 8px 8px 0 0; border-style: solid;
+            border-color: var(--primary-color) transparent transparent transparent;
         }
-        /* 마우스 올리거나 활성화되면 말풍선 보임 */
-        .part:hover .speech-bubble, .part.moving .speech-bubble { opacity: 1; top: -55px; }
+
+        /* 슬라이더 움직일 때 강제로 표시 */
+        .part.show-bubble .speech-bubble { opacity: 1; transform: translateX(-50%) scale(1); top: -80px; }
 
         /* 도킹 완료 시 스타일 */
-        .part.docked { border-color: #ff4d4d; background: #ff4d4d; color: white; }
-        .part.docked .part-name { color: white; }
+        .part.docked { z-index: 15; /* 엔진 뒤로 숨기거나 합체 */ opacity: 0; pointer-events: none; transition: 0.5s; }
 
-        /* --- 4. 오른쪽: 컨트롤 패널 --- */
+
+        /* --- 4. 오른쪽 패널: 컨트롤 센터 --- */
         .control-panel {
-            width: 300px; background: #111; border-left: 1px solid #333; padding: 20px;
+            width: 320px; background: var(--panel-bg); border-left: 2px solid #222838; padding: 30px;
             display: flex; flex-direction: column; justify-content: center;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.3); z-index: 5;
         }
         
         /* 슬라이더 디자인 */
-        .slider-box { text-align: center; margin-bottom: 30px; }
+        .slider-box { text-align: center; margin-bottom: 40px; }
         input[type="range"] {
-            width: 100%; cursor: pointer; accent-color: #ff4d4d; height: 8px; background: #333; border-radius: 5px;
+            width: 100%; cursor: pointer; accent-color: var(--primary-color); height: 10px; background: #222838; border-radius: 10px; outline: none;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
         }
-        .status-text { font-size: 1.2rem; color: #ff4d4d; font-weight: bold; margin-top: 15px; }
-        .sub-text { font-size: 0.8rem; color: #666; margin-top: 5px; }
+        .status-text { font-size: 1.5rem; color: var(--primary-color); font-weight: 900; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(255, 51, 51, 0.5); }
+        .sub-text { font-size: 0.85rem; color: #8a95b3; margin-top: 10px; font-weight: 500; }
 
-        /* --- 5. 하단 네비게이션 --- */
+        /* --- 5. 하단 푸터 --- */
         footer {
-            height: 60px; background: #000; border-top: 1px solid #333; display: flex;
-            justify-content: space-between; align-items: center; padding: 0 20px;
+            height: 70px; background: #0c0f18; border-top: 2px solid #222838; display: flex;
+            justify-content: space-between; align-items: center; padding: 0 30px; z-index: 10;
         }
         .nav-btn {
-            text-decoration: none; color: #666; font-size: 0.9rem; transition: 0.3s; display: flex; align-items: center; gap: 8px;
+            text-decoration: none; color: #8a95b3; font-size: 0.95rem; transition: 0.3s; display: flex; align-items: center; gap: 10px; font-weight: bold;
         }
         .nav-btn:hover { color: white; }
         
-        /* ★ 최종 버튼 (정직한 문구) ★ */
+        /* ★ 최종 버튼: 압도적 존재감 ★ */
         .next-btn {
-            background: #333; color: #777; padding: 12px 24px; border-radius: 30px;
-            font-weight: bold; text-decoration: none; font-size: 0.9rem;
-            pointer-events: none; opacity: 0.5; transition: 0.5s;
+            background: linear-gradient(135deg, #333, #111); color: #555; padding: 15px 35px; border-radius: 50px;
+            font-weight: 800; text-decoration: none; font-size: 1rem;
+            pointer-events: none; opacity: 0.6; transition: 0.5s; border: 2px solid #333;
+            display: flex; align-items: center; gap: 10px; text-transform: uppercase;
         }
-        /* 활성화 상태 */
         .next-btn.active {
-            background: #ff4d4d; color: white; pointer-events: auto; opacity: 1; cursor: pointer;
-            box-shadow: 0 0 20px rgba(255, 77, 77, 0.5);
+            background: linear-gradient(135deg, #ff4d4d, #cc0000); color: white; pointer-events: auto; opacity: 1; cursor: pointer;
+            border-color: #ff4d4d; box-shadow: 0 0 30px rgba(255, 77, 77, 0.6); transform: scale(1.05);
         }
+        .next-btn.active:hover { transform: scale(1.1); }
 
     </style>
 </head>
 <body>
 
     <header>
-        <div>DREAM-FI ASSEMBLY MANUAL</div>
+        <div>DREAM-FI MECHANICS | ASSEMBLY PROTOCOL</div>
     </header>
 
     <div class="main-container">
         <div class="info-panel">
-            <div class="panel-title">부품 목록 (Parts List)</div>
+            <div class="panel-title">COMPONENT STATUS</div>
             
             <div class="part-card" id="card1">
                 <div class="part-icon">⚙️</div>
                 <div class="part-info">
                     <h4>1. 변속기 (Transmission)</h4>
-                    <p>엔진의 힘을 바퀴로 전달함</p>
+                    <p>회전력을 바퀴로 전달합니다.</p>
                 </div>
             </div>
             <div class="part-card" id="card2">
                 <div class="part-icon">🔩</div>
                 <div class="part-info">
                     <h4>2. 마운트 (Mount)</h4>
-                    <p>진동을 흡수하고 엔진 고정</p>
+                    <p>엔진 진동을 잡아줍니다.</p>
                 </div>
             </div>
             <div class="part-card" id="card3">
                 <div class="part-icon">💧</div>
                 <div class="part-info">
                     <h4>3. 냉각 장치 (Cooling)</h4>
-                    <p>엔진 과열을 막는 필수 장치</p>
+                    <p>과열을 방지합니다.</p>
                 </div>
             </div>
             <div class="part-card" id="card4">
                 <div class="part-icon">💨</div>
                 <div class="part-info">
                     <h4>4. 배기구 (Exhaust)</h4>
-                    <p>연소된 가스를 밖으로 배출</p>
+                    <p>가스를 배출합니다.</p>
                 </div>
             </div>
         </div>
@@ -165,32 +205,50 @@
         <div class="workspace">
             
             <div class="engine-core" id="core">
-                <div style="font-size: 3rem; color: #444;">V8</div>
-                <div class="core-label">ENGINE CORE BLOCK</div>
+                <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="50" y="50" width="100" height="120" rx="10" fill="#333" stroke="#666" stroke-width="2"/>
+                    <path d="M50 80 H150 M50 110 H150 M50 140 H150" stroke="#444" stroke-width="2"/>
+                    <circle cx="75" cy="70" r="10" fill="#222" stroke="#ff4d4d" stroke-width="2"/>
+                    <circle cx="125" cy="70" r="10" fill="#222" stroke="#ff4d4d" stroke-width="2"/>
+                    <rect x="70" y="20" width="60" height="30" fill="#cc0000" rx="5"/>
+                    <text x="100" y="40" text-anchor="middle" fill="white" font-weight="bold" font-size="14">V8 CORE</text>
+                </svg>
             </div>
 
             <div class="part" id="part1">
-                <div class="speech-bubble">힘을 조절해요!</div>
-                <div style="font-size: 1.5rem;">⚙️</div>
-                <div class="part-name">변속기</div>
+                <div class="speech-bubble">변속기 준비 완료!</div>
+                <svg width="80" height="80" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="40" fill="#444" stroke="#888" stroke-width="2"/>
+                    <path d="M50 10 L50 30 M50 70 L50 90 M10 50 L30 50 M70 50 L90 50" stroke="#888" stroke-width="4"/>
+                    <circle cx="50" cy="50" r="15" fill="#222"/>
+                </svg>
+                <div class="part-name">변속기 (Transmission)</div>
             </div>
 
             <div class="part" id="part2">
-                <div class="speech-bubble">꽉 잡아줄게요!</div>
-                <div style="font-size: 1.5rem;">🔩</div>
-                <div class="part-name">마운트</div>
+                <div class="speech-bubble">진동을 잡겠습니다!</div>
+                <svg width="80" height="80" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="30" y="20" width="40" height="60" fill="#333" stroke="#888" stroke-width="2"/>
+                    <path d="M30 30 L70 30 M30 40 L70 40 M30 50 L70 50 M30 60 L70 60" stroke="#aaa" stroke-width="2"/>
+                </svg>
+                <div class="part-name">마운트 (Mount)</div>
             </div>
 
             <div class="part" id="part3">
-                <div class="speech-bubble">식혀드릴게요!</div>
-                <div style="font-size: 1.5rem;">💧</div>
-                <div class="part-name">냉각수</div>
+                <div class="speech-bubble">냉각수 연결!</div>
+                <svg width="80" height="80" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 10 Q80 50 80 70 A30 30 0 0 1 20 70 Q20 50 50 10" fill="#00ccff" stroke="white" stroke-width="2"/>
+                </svg>
+                <div class="part-name">냉각수 (Cooling)</div>
             </div>
 
             <div class="part" id="part4">
-                <div class="speech-bubble">가스 배출!</div>
-                <div style="font-size: 1.5rem;">💨</div>
-                <div class="part-name">배기구</div>
+                <div class="speech-bubble">배기 시스템 장착!</div>
+                <svg width="80" height="80" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 50 Q50 20 80 50" fill="none" stroke="#ffcc00" stroke-width="8" stroke-linecap="round"/>
+                    <rect x="10" y="45" width="20" height="30" fill="#555"/>
+                </svg>
+                <div class="part-name">배기구 (Exhaust)</div>
             </div>
         </div>
 
@@ -208,7 +266,7 @@
         <a href="../../index.html" class="nav-btn">◀ 메인 메뉴로</a>
         
         <a href="../1-2-detail/index.html" class="next-btn" id="nextBtn">
-            ▶ 엔진 입체 영상 보기 (Core View)
+            ▶ 엔진 입체 영상 보기 (3D View)
         </a>
     </footer>
 
@@ -234,20 +292,19 @@
         ];
 
         // [시작 위치] (중앙 기준 거리)
-        // 변속기(우), 마운트(하), 냉각수(좌), 배기구(상)
         const startPos = [
-            {x: 250, y: 0}, 
-            {x: 0, y: 220}, 
-            {x: -250, y: 0}, 
-            {x: 0, y: -220}
+            {x: 250, y: 0}, // 변속기 (우)
+            {x: 0, y: 220}, // 마운트 (하)
+            {x: -250, y: 0}, // 냉각수 (좌)
+            {x: 0, y: -220} // 배기구 (상)
         ];
 
-        // [최종 도킹 위치] (엔진에 붙는 위치)
+        // [최종 도킹 위치] (엔진에 딱 붙는 위치)
         const endPos = [
-            {x: 100, y: 0}, 
-            {x: 0, y: 130}, 
-            {x: -100, y: 0}, 
-            {x: 0, y: -130}
+            {x: 60, y: 0}, 
+            {x: 0, y: 70}, 
+            {x: -60, y: 0}, 
+            {x: 0, y: -70}
         ];
 
         // 초기화
@@ -273,33 +330,30 @@
                 
                 part.style.transform = `translate(${nowX}px, ${nowY}px)`;
 
-                // 움직일 때 말풍선 표시
-                if(percent > 10 && percent < 95) {
-                    part.classList.add('moving');
+                // ★ 말풍선 강제 표시 로직 ★
+                if(percent > 5 && percent < 95) {
+                    part.classList.add('show-bubble'); // 클래스 추가로 CSS에서 강제 표시
                 } else {
-                    part.classList.remove('moving');
+                    part.classList.remove('show-bubble');
                 }
 
-                // 완료 시 스타일 변경
+                // 완료 시 스타일 변경 (엔진에 흡수되는 효과)
                 if(percent > 95) {
                     part.classList.add('docked');
                     cards[i].classList.add('active'); // 왼쪽 목록도 하이라이트
                 } else {
                     part.classList.remove('docked');
                     cards[i].classList.remove('active');
+                    part.style.opacity = "1"; // 다시 보이게
                 }
             });
 
             // 100% 도달 시
             if(percent === 100) {
-                core.style.borderColor = "#ff4d4d";
-                core.style.boxShadow = "0 0 30px rgba(255, 77, 77, 0.4)";
-                
-                // 버튼 활성화
+                core.classList.add('complete');
                 nextBtn.classList.add('active');
             } else {
-                core.style.borderColor = "#444";
-                core.style.boxShadow = "0 10px 30px rgba(0,0,0,0.5)";
+                core.classList.remove('complete');
                 nextBtn.classList.remove('active');
             }
         }
