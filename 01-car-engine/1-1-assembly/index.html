@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream-Fi #1-1: 엔진 도킹 (Engine Docking)</title>
+    <style>
+        :root { --brand-gold: #ffcc00; --brand-red: #ff4444; --bg-dark: #0f0f0f; --panel-l: #151515; --panel-c: #050505; --panel-r: #1a1a1a; }
+        
+        * { box-sizing: border-box; }
+
+        body { 
+            background: var(--bg-dark); color: white; font-family: 'Pretendard', sans-serif; 
+            margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; 
+        }
+
+        /* [모바일 최적화] */
+        @media (max-width: 768px) {
+            body { height: auto; overflow-y: auto; }
+            .main-wrapper { flex-direction: column; height: auto !important; }
+            .panel-left { height: 200px !important; border-bottom: 1px solid #333; }
+            .panel-center { height: 450px !important; border-bottom: 1px solid #333; }
+            .panel-right { height: auto !important; padding-bottom: 50px; }
+            h1, h2, h3, p, span, div, button { word-break: keep-all; word-wrap: break-word; }
+            .nav-footer { position: relative !important; margin-top: 20px; }
+        }
+
+        header { height: 50px; display: flex; align-items: center; justify-content: center; background: #000; border-bottom: 1px solid #333; flex-shrink: 0; }
+        .brand-title { color: var(--brand-red); font-weight: 900; letter-spacing: 1px; font-size: 1.1rem; }
+
+        .main-wrapper { display: flex; flex: 1; height: calc(100vh - 120px); width: 100%; }
+
+        /* 3단 레이아웃 */
+        .panel-left { flex: 1.2; background: var(--panel-l); border-right: 1px solid #333; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .panel-center { flex: 2.2; background: radial-gradient(circle at center, #222 0%, #000 90%); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .panel-right { flex: 1.4; background: var(--panel-r); border-left: 1px solid #333; padding: 25px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; }
+
+        .panel-badge { position: absolute; top: 15px; left: 15px; font-size: 0.7rem; font-weight: bold; color: #666; border: 1px solid #333; padding: 4px 10px; border-radius: 4px; background: rgba(0,0,0,0.5); letter-spacing: 1px; z-index: 5; }
+
+        canvas { max-width: 100%; max-height: 100%; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.8)); }
+
+        /* 컨트롤 UI */
+        .part-list { width: 100%; margin-bottom: 20px; }
+        .part-item { 
+            display: flex; justify-content: space-between; padding: 14px; margin-bottom: 8px;
+            background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid #333;
+            cursor: pointer; transition: 0.2s; font-size: 0.9rem;
+        }
+        .part-item:hover { background: rgba(255,255,255,0.08); border-color: #555; }
+        .part-item.active { border-color: var(--brand-red); background: rgba(255, 68, 68, 0.1); color: var(--brand-red); font-weight: bold; }
+
+        .slider-box { width: 100%; background: #111; padding: 20px; border-radius: 12px; border: 1px solid #333; text-align: center; margin-bottom: 20px; }
+        input[type=range] { width: 100%; margin: 15px 0; accent-color: var(--brand-red); cursor: pointer; }
+
+        /* 하단 내비게이션 */
+        .nav-footer { 
+            height: 70px; background: #000; border-top: 1px solid #333; flex-shrink: 0;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 30px;
+        }
+        .nav-btn { 
+            text-decoration: none; color: #888; font-size: 0.9rem; font-weight: bold; 
+            display: flex; align-items: center; gap: 10px; transition: 0.3s; padding: 10px 20px; border-radius: 8px;
+        }
+        .nav-btn:hover { color: white; background: #222; }
+        .nav-btn.primary { color: var(--brand-gold); border: 1px solid #333; }
+        .nav-btn.primary:hover { background: rgba(255, 204, 0, 0.1); border-color: var(--brand-gold); }
+
+        /* 팝업 모달 */
+        #info-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(5px); opacity: 0; transition: 0.3s; }
+        #info-modal.show { opacity: 1; }
+        .modal-box { width: 90%; max-width: 400px; background: #1a1a1a; border: 1px solid #444; border-radius: 15px; padding: 30px; box-shadow: 0 0 50px rgba(0,0,0,0.8); transform: scale(0.9); transition: 0.3s; }
+        #info-modal.show .modal-box { transform: scale(1); }
+    </style>
+</head>
+<body>
+
+    <div id="info-modal" onclick="closeModal(event)">
+        <div class="modal-box">
+            <h2 id="m-title" style="color:var(--brand-red); margin-top:0;">Title</h2>
+            <div style="font-size:0.75rem; color:#666; margin-bottom:15px; font-weight:bold;">ENGINEERING DEF.</div>
+            <p id="m-eng" style="color:#ccc; font-size:0.9rem; line-height:1.6; margin-bottom:25px; border-left:3px solid #444; padding-left:15px;">...</p>
+            <div style="font-size:0.75rem; color:var(--brand-gold); margin-bottom:15px; font-weight:bold;">VIBE CHECK (EASY MODE)</div>
+            <p id="m-vibe" style="color:#fff; font-size:1.05rem; font-weight:bold; line-height:1.5;">...</p>
+            <button onclick="closeModalBtn()" style="width:100%; padding:12px; margin-top:20px; background:#333; border:none; color:white; border-radius:8px; cursor:pointer; font-weight:bold;">닫기 (Close)</button>
+        </div>
+    </div>
+
+    <header>
+        <div class="brand-title">DREAM-FI MECHANICS | 1-1</div>
+    </header>
+
+    <div class="main-wrapper">
+        <div class="panel-left">
+            <div class="panel-badge">LOCATION MAP</div>
+            <canvas id="navCanvas" width="200" height="300"></canvas>
+            <div style="margin-top:15px; font-size:0.8rem; color:#555; text-align:center;">
+                현재 <span style="color:#ff4444; font-weight:bold;">엔진룸(Front)</span><br>작업 중입니다.
+            </div>
+        </div>
+
+        <div class="panel-center" id="main-container">
+            <div class="panel-badge" style="color:var(--brand-red);">DOCKING VIEW</div>
+            <canvas id="mainCanvas" width="600" height="600"></canvas>
+            <div style="position:absolute; bottom:20px; font-size:0.8rem; color:rgba(255,255,255,0.3);">
+                Drag to Rotate 360°
+            </div>
+        </div>
+
+        <div class="panel-right">
+            <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0;">⚙️ 엔진 도킹</h3>
+                <span style="font-size:0.8rem; color:#666;">Step 1-1</span>
+            </div>
+
+            <div class="slider-box">
+                <label style="font-size:0.85rem; color:var(--brand-red); font-weight:bold;">DOCKING SLIDER</label>
+                <input type="range" id="assemblyRange" min="0" max="100" value="0">
+                <div id="statusText" style="font-size:0.9rem; font-weight:bold;">도킹 대기 (Standby)</div>
+            </div>
+
+            <div class="part-list">
+                <div class="part-item" onclick="showInfo(1)" id="p-trans">
+                    <span>1. 변속기 (뒤)</span> <span style="opacity:0.5">ℹ️</span>
+                </div>
+                <div class="part-item" onclick="showInfo(2)" id="p-mount">
+                    <span>2. 엔진 마운트 (아래)</span> <span style="opacity:0.5">ℹ️</span>
+                </div>
+                <div class="part-item" onclick="showInfo(3)" id="p-cool">
+                    <span>3. 냉각수 호스 (앞)</span> <span style="opacity:0.5">ℹ️</span>
+                </div>
+                <div class="part-item" onclick="showInfo(4)" id="p-exhaust">
+                    <span>4. 배기 매니폴드 (위)</span> <span style="opacity:0.5">ℹ️</span>
+                </div>
+            </div>
+            
+            <div style="font-size:0.8rem; color:#444; line-height:1.4; text-align:center; margin-top:auto;">
+                * 엔진이 차체와 연결되어야<br><b>진짜 심장</b>이 됩니다.
+            </div>
+        </div>
+    </div>
+
+    <footer class="nav-footer">
+        <a href="../index.html" class="nav-btn">
+            ◀ 이전 단계 (엔진 내부)
+        </a>
+        <a href="../../index.html" class="nav-btn primary">
+            목차로 가기 (Menu) 🏠
+        </a>
+    </footer>
+
+    <script>
+        // [데이터]
+        const partsInfo = {
+            1: { t: "변속기 (Transmission)", e: "엔진의 회전 동력을 받아 주행 상황에 맞게 토크와 속도를 변환하여 바퀴로 전달하는 장치.", v: "\"에너지의 악수 (Handshake)\"\n엔진 혼자 돌면 헛방입니다! 여기서 변속기랑 손을 '탁!' 잡아야 바퀴가 굴러갑니다. 손을 잡으면 출발(D), 놓으면 중립(N)입니다." },
+            2: { t: "엔진 마운트 (Engine Mount)", e: "엔진의 진동과 소음(NVH)이 차체 프레임으로 전달되지 않도록 절연하는 고무/유압 지지대.", v: "\"진동 흡수 베개\"\n엔진은 1분에 수천 번 폭발하며 미친 듯이 떱니다. 이 고무 베개가 없으면 차 전체가 안마의자처럼 흔들릴 거예요." },
+            3: { t: "냉각수 호스 (Cooling System)", e: "워터펌프와 라디에이터를 연결하는 순환로. 엔진의 과열(Overheat)을 방지함.", v: "\"생명수 링거\"\n엔진은 엄청난 불덩어리입니다. 찬물을 계속 공급해 주지 않으면 쇠가 녹아버립니다. 뜨거운 물은 뱉고 찬물을 마시는 '빨대'입니다." },
+            4: { t: "배기 매니폴드 (Exhaust)", e: "각 실린더의 연소 가스를 한곳으로 모아 배기관(머플러)으로 배출하는 다기관.", v: "\"콧구멍과 굴뚝\"\n숨을 들이마셨으면 내뱉어야죠! 엔진이 '후~' 하고 뜨거운 입김(매연)을 뿜어내는 통로입니다. 막히면 엔진이 꺼집니다." }
+        };
+
+        // [팝업 로직]
+        const modal = document.getElementById('info-modal');
+        function showInfo(id) {
+            const d = partsInfo[id];
+            document.getElementById('m-title').innerText = d.t;
+            document.getElementById('m-eng').innerText = d.e;
+            document.getElementById('m-vibe').innerText = d.v;
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+        function closeModal(e) { if(e.target === modal) closeModalBtn(); }
+        function closeModalBtn() { modal.classList.remove('show'); setTimeout(() => modal.style.display = 'none', 300); }
+
+        // [1. 내비게이터 (Navigator)]
+        const navCanvas = document.getElementById('navCanvas');
+        const navCtx = navCanvas.getContext('2d');
+        function drawNavigator() {
+            navCtx.clearRect(0, 0, 200, 300);
+            const cx = 100, cy = 150;
+            navCtx.strokeStyle = "#444"; navCtx.lineWidth = 2;
+            // 차체 프레임
+            navCtx.strokeRect(cx - 40, cy - 80, 80, 160);
+            // 앞부분 강조
+            navCtx.fillStyle = "rgba(255, 68, 68, 0.2)";
+            navCtx.fillRect(cx - 38, cy - 78, 76, 50);
+            // 바퀴
+            navCtx.fillStyle = "#333";
+            navCtx.fillRect(cx - 70, cy - 75, 20, 30); navCtx.fillRect(cx + 50, cy - 75, 20, 30);
+            navCtx.fillRect(cx - 70, cy + 45, 20, 30); navCtx.fillRect(cx + 50, cy + 45, 20, 30);
+            
+            // 엔진 위치 점멸
+            const alpha = (Math.sin(Date.now() / 200) + 1) / 2;
+            navCtx.fillStyle = `rgba(255, 68, 68, ${alpha})`;
+            navCtx.beginPath(); navCtx.rect(cx - 20, cy - 70, 40, 30); navCtx.fill();
+            navCtx.strokeStyle = "red"; navCtx.lineWidth = 1; navCtx.stroke();
+            requestAnimationFrame(drawNavigator);
+        }
+        drawNavigator();
+
+        // [2. 메인 도킹 뷰]
+        const mainCanvas = document.getElementById('mainCanvas');
+        const ctx = mainCanvas.getContext('2d');
+        const range = document.getElementById('assemblyRange');
+        const statusText = document.getElementById('statusText');
+        const mainContainer = document.getElementById('main-container');
+
+        let mouseX = 0; let targetAngle = 0; let currentAngle = 0;
+        mainContainer.addEventListener('mousemove', (e) => {
+            const rect = mainContainer.getBoundingClientRect();
+            mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1; 
+        });
+
+        function drawPartLabel(text, x, y, align="center") {
+            ctx.save();
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 14px Pretendard";
+            ctx.shadowColor = "rgba(0,0,0,0.8)";
+            ctx.shadowBlur = 4;
+            ctx.textAlign = align;
+            ctx.fillText(text, x, y);
+            ctx.restore();
+        }
+
+        function drawScene() {
+            ctx.clearRect(0,0, mainCanvas.width, mainCanvas.height);
+            const cx = mainCanvas.width/2; const cy = mainCanvas.height/2;
+            
+            targetAngle = mouseX * 0.3; // 회전각 제한
+            currentAngle += (targetAngle - currentAngle) * 0.1;
+            
+            const progress = parseInt(range.value)/100;
+            const shake = (progress >= 1) ? (Math.random() - 0.5) * 2 : 0; // 시동 걸린 느낌 (진동)
+
+            if(progress < 0.1) statusText.innerText = "도킹 대기 (Standby)";
+            else if(progress < 1) statusText.innerText = "결합 중... (Docking)";
+            else { statusText.innerText = "도킹 완료! (Engine Start)"; statusText.style.color="var(--brand-red)"; }
+
+            ctx.save();
+            ctx.translate(cx + shake, cy + shake);
+            ctx.rotate(currentAngle); 
+
+            // [0. 엔진 블록 (중심)]
+            ctx.fillStyle = "#444";
+            ctx.beginPath(); ctx.roundRect(-50, -60, 100, 120, 10); ctx.fill(); // 블록
+            ctx.fillStyle = "#222"; 
+            ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI*2); ctx.fill(); // 크랭크 커버
+            ctx.fillStyle = "#ff4444";
+            ctx.font = "bold 12px sans-serif"; ctx.textAlign="center"; ctx.fillText("V4 ENGINE", 0, 5);
+
+            // [1. 변속기 (오른쪽에서 결합)]
+            const transX = 200 - (progress * 135); // 200 -> 65
+            ctx.fillStyle = "#333";
+            ctx.beginPath(); ctx.moveTo(transX, -50); ctx.lineTo(transX + 80, -30); ctx.lineTo(transX + 80, 30); ctx.lineTo(transX, 50); ctx.fill();
+            // 변속기 라벨
+            if(progress < 1) drawPartLabel("1. 변속기", transX + 40, -60, "center");
+
+            // [2. 엔진 마운트 (아래에서 결합)]
+            const mountY = 180 - (progress * 110); // 180 -> 70
+            ctx.fillStyle = "#111"; // 고무
+            ctx.fillRect(-40, mountY, 80, 20);
+            ctx.fillStyle = "#666"; // 브라켓
+            ctx.fillRect(-30, mountY+20, 60, 10);
+            // 마운트 라벨
+            if(progress < 1) drawPartLabel("2. 마운트", 0, mountY + 50, "center");
+
+            // [3. 냉각수 호스 (왼쪽에서 결합)]
+            const hoseX = -180 + (progress * 120); // -180 -> -60
+            ctx.strokeStyle = "#00ccff"; ctx.lineWidth = 8; ctx.lineCap = "round";
+            ctx.beginPath(); ctx.moveTo(hoseX, -40); ctx.bezierCurveTo(hoseX-30, -40, hoseX-30, 0, hoseX-60, 0); ctx.stroke();
+            // 호스 라벨
+            if(progress < 1) drawPartLabel("3. 냉각수", hoseX - 30, -50, "center");
+
+            // [4. 배기 매니폴드 (위에서 결합)]
+            const exhaustY = -180 + (progress * 110); // -180 -> -70
+            ctx.fillStyle = "#554433"; // 녹슨 쇠 느낌
+            ctx.beginPath(); 
+            ctx.moveTo(-40, exhaustY); ctx.lineTo(-20, exhaustY+20); ctx.lineTo(20, exhaustY+20); ctx.lineTo(40, exhaustY);
+            ctx.lineTo(40, exhaustY-40); ctx.lineTo(-40, exhaustY-40); ctx.fill();
+            // 배기 라벨
+            if(progress < 1) drawPartLabel("4. 배기구", 0, exhaustY - 50, "center");
+
+            ctx.restore();
+            requestAnimationFrame(drawScene);
+        }
+        drawScene();
+    </script>
+</body>
+</html>
