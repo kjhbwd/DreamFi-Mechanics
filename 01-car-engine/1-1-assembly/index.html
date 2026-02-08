@@ -2,108 +2,95 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Dream-Fi | Interactive Assembly</title>
+    <title>Dream-Fi | Minority Report Assembly</title>
     <style>
-        :root { --red: #ff3333; --blue: #00d2ff; --bg: #05070a; }
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
+        :root { --neon: #00f3ff; --red: #ff003c; --bg: #05070a; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; height: 100vh; }
         
-        header { height: 60px; border-bottom: 1px solid #222; display: flex; align-items: center; justify-content: center; font-weight: 900; letter-spacing: 3px; color: var(--red); background: #000; }
+        /* 배경 그리드 */
+        .workspace { width: 100vw; height: 100vh; position: relative; 
+            background-image: radial-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px); background-size: 50px 50px; }
 
-        /* 작업 공간 */
-        .workspace { position: relative; width: 100vw; height: calc(100vh - 130px); background-image: radial-gradient(#1a1a1a 1px, transparent 1px); background-size: 40px 40px; }
+        /* 엔진 타겟 */
+        .engine-target { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            width: 250px; height: 250px; border: 2px dashed rgba(0, 243, 255, 0.2); border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; transition: 0.5s; }
+        .engine-target.active { border-color: var(--red); box-shadow: 0 0 50px rgba(255, 0, 60, 0.3); }
 
-        /* 엔진 코어 */
-        .engine-core { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; z-index: 10; transition: 0.5s; }
-        .engine-core.complete { filter: drop-shadow(0 0 30px var(--red)); }
+        /* 부품 스타일 */
+        .part { position: absolute; width: 100px; cursor: grab; z-index: 20; text-align: center; }
+        .part svg { width: 80px; filter: drop-shadow(0 0 10px var(--neon)); transition: 0.3s; }
+        .part:active svg { transform: scale(1.1); filter: drop-shadow(0 0 20px var(--neon)); }
 
-        /* 드래그 가능한 부품 */
-        .part { position: absolute; width: 80px; height: 80px; cursor: grab; z-index: 20; display: flex; flex-direction: column; align-items: center; }
-        .part:active { cursor: grabbing; }
-        
-        /* 말풍선 */
-        .bubble { position: absolute; top: -50px; background: white; color: black; padding: 5px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; opacity: 0; transition: 0.3s; border: 2px solid var(--red); pointer-events: none; }
-        .part:hover .bubble { opacity: 1; top: -60px; }
+        /* 말풍선 레이블 */
+        .label { position: absolute; top: -40px; left: 50%; transform: translateX(-50%); 
+            background: var(--neon); color: black; padding: 5px 12px; border-radius: 5px; 
+            font-size: 11px; font-weight: bold; opacity: 0; transition: 0.3s; white-space: nowrap; }
+        .part:hover .label { opacity: 1; top: -50px; }
 
-        /* 도킹 지점 가이드 */
-        .target-slot { position: absolute; width: 80px; height: 80px; border: 2px dashed #333; border-radius: 10px; z-index: 5; }
-
-        footer { height: 70px; background: #000; border-top: 1px solid #222; display: flex; justify-content: center; align-items: center; }
-        .next-btn { background: #222; color: #444; padding: 15px 40px; border-radius: 50px; text-decoration: none; font-weight: bold; pointer-events: none; transition: 0.5s; }
-        .next-btn.active { background: var(--red); color: white; pointer-events: auto; box-shadow: 0 0 30px var(--red); }
+        /* 다음 단계 버튼 */
+        .next-btn { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); 
+            padding: 18px 50px; border-radius: 50px; background: #111; color: #444; 
+            text-decoration: none; font-weight: bold; border: 1px solid #333; transition: 0.5s; pointer-events: none; }
+        .next-btn.active { background: var(--red); color: white; border-color: var(--red); 
+            pointer-events: auto; box-shadow: 0 0 30px var(--red); }
     </style>
 </head>
 <body>
-    <header>V8 INTERACTIVE ASSEMBLY</header>
-    <div class="workspace" id="ws">
-        <div class="engine-core" id="core">
-            <svg viewBox="0 0 200 200"><rect x="50" y="40" width="100" height="120" rx="10" fill="#333" stroke="#666"/><text x="100" y="110" text-anchor="middle" fill="#555" font-weight="bold">CORE</text></svg>
+    <div class="workspace">
+        <header style="padding: 20px; text-align: center; border-bottom: 1px solid #1a1a1a; letter-spacing: 5px; color: var(--neon);">
+            V8 ENGINE ASSEMBLY PROTOCOL
+        </header>
+
+        <div class="engine-target" id="target">
+            <svg viewBox="0 0 100 100" width="150"><rect x="25" y="20" width="50" height="60" rx="5" fill="none" stroke="#333" stroke-width="2"/><text x="50" y="55" text-anchor="middle" fill="#222" font-size="8">WAITING FOR PARTS</text></svg>
         </div>
 
-        <div class="target-slot" style="top:50%; left:calc(50% + 100px); transform:translate(-50%,-50%);" data-part="p1"></div>
-        <div class="target-slot" style="top:calc(50% + 110px); left:50%; transform:translate(-50%,-50%);" data-part="p2"></div>
-        <div class="target-slot" style="top:50%; left:calc(50% - 100px); transform:translate(-50%,-50%);" data-part="p3"></div>
-        <div class="target-slot" style="top:calc(50% - 110px); left:50%; transform:translate(-50%,-50%);" data-part="p4"></div>
+        <div class="part" id="p1" style="top:25%; left:20%;">
+            <div class="label">TRANSMISSION (변속기)</div>
+            <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" stroke-width="2"/><path d="M50 20v60M20 50h60" stroke="currentColor"/></svg>
+        </div>
 
-        <div class="part" id="p1" style="top:100px; left:100px;">
-            <div class="bubble">변속기: 동력 전달</div>
-            <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" fill="#444" stroke="#888"/></svg>
-        </div>
-        <div class="part" id="p2" style="top:100px; right:100px;">
-            <div class="bubble">마운트: 진동 흡수</div>
-            <svg viewBox="0 0 100 100"><rect x="20" y="40" width="60" height="20" fill="#444" stroke="#888"/></svg>
-        </div>
-        <div class="part" id="p3" style="bottom:100px; left:100px;">
-            <div class="bubble">냉각수: 열 식히기</div>
-            <svg viewBox="0 0 100 100"><path d="M50 20 Q80 60 80 80 A30 30 0 0 1 20 80 Q20 60 50 20" fill="#00aaff"/></svg>
-        </div>
-        <div class="part" id="p4" style="bottom:100px; right:100px;">
-            <div class="bubble">배기구: 가스 배출</div>
-            <svg viewBox="0 0 100 100"><path d="M20 50 Q50 10 80 50" fill="none" stroke="#ffcc00" stroke-width="10"/></svg>
+        <div class="part" id="p2" style="bottom:25%; right:20%;">
+            <div class="label">EXHAUST SYSTEM (배기구)</div>
+            <svg viewBox="0 0 100 100"><path d="M20 60 Q50 20 80 60" fill="none" stroke="currentColor" stroke-width="5"/></svg>
         </div>
     </div>
-    <footer>
-        <a href="../1-2-detail/index.html" class="next-btn" id="nextBtn">▶ 엔진 입체 영상 보기 (3D View)</a>
-    </footer>
+
+    <a href="../1-2-detail/index.html" class="next-btn" id="nextBtn">ANALYZE 3D CORE (다음 단계)</a>
 
     <script>
-        let dockedCount = 0;
+        let docked = 0;
+        const target = document.getElementById('target').getBoundingClientRect();
         const nextBtn = document.getElementById('nextBtn');
-        const core = document.getElementById('core');
 
-        document.querySelectorAll('.part').forEach(part => {
-            let isDragging = false;
-            part.addEventListener('mousedown', e => { isDragging = true; part.style.zIndex = 100; });
-            
-            document.addEventListener('mousemove', e => {
-                if (!isDragging) return;
-                part.style.left = (e.clientX - 40) + 'px';
-                part.style.top = (e.clientY - 100) + 'px';
-            });
+        document.querySelectorAll('.part').forEach(p => {
+            let dragging = false;
+            p.onmousedown = () => { dragging = true; p.style.zIndex = 100; };
+            document.onmousemove = e => {
+                if(dragging) {
+                    p.style.left = e.clientX - 50 + 'px';
+                    p.style.top = e.clientY - 50 + 'px';
+                }
+            };
+            document.onmouseup = () => {
+                if(!dragging) return;
+                dragging = false;
+                const rect = p.getBoundingClientRect();
+                const dist = Math.hypot(rect.left - target.left + 50, rect.top - target.top + 50);
 
-            document.addEventListener('mouseup', e => {
-                if (!isDragging) return;
-                isDragging = false;
-                
-                // 도킹 체크
-                const target = document.querySelector(`.target-slot[data-part="${part.id}"]`);
-                const tRect = target.getBoundingClientRect();
-                const pRect = part.getBoundingClientRect();
-                
-                const dist = Math.hypot(tRect.left - pRect.left, tRect.top - pRect.top);
-                
-                if (dist < 50) { // 근처에 가면 자석처럼 붙음
-                    part.style.left = tRect.left + 'px';
-                    part.style.top = tRect.top + 'px';
-                    part.style.pointerEvents = 'none';
-                    part.style.zIndex = 5;
-                    target.style.borderColor = '#ff4d4d';
-                    dockedCount++;
-                    if(dockedCount === 4) {
-                        core.classList.add('complete');
+                if(dist < 150) { // 도킹 성공
+                    p.style.left = '50%'; p.style.top = '50%';
+                    p.style.transform = 'translate(-50%, -50%)';
+                    p.style.pointerEvents = 'none';
+                    p.style.opacity = '0.5';
+                    docked++;
+                    if(docked >= 2) {
+                        document.getElementById('target').classList.add('active');
                         nextBtn.classList.add('active');
                     }
                 }
-            });
+            };
         });
     </script>
 </body>
