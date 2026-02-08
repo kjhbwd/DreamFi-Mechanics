@@ -2,95 +2,247 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Dream-Fi | Minority Report Assembly</title>
+    <title>Dream-Fi | Engine Assembly</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #00f3ff; --red: #ff003c; --bg: #05070a; }
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; height: 100vh; }
-        
-        /* 배경 그리드 */
-        .workspace { width: 100vw; height: 100vh; position: relative; 
-            background-image: radial-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px); background-size: 50px 50px; }
+        :root { 
+            --bg-dark: #0a0a0a; 
+            --panel-bg: #141414; 
+            --border: 1px solid #333;
+            --accent-blue: #00ccff; /* 슬라이더 색상 */
+            --accent-red: #ff3333; /* 위치 표시 색상 */
+            --text-gray: #888;
+        }
 
-        /* 엔진 타겟 */
-        .engine-target { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 250px; height: 250px; border: 2px dashed rgba(0, 243, 255, 0.2); border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; transition: 0.5s; }
-        .engine-target.active { border-color: var(--red); box-shadow: 0 0 50px rgba(255, 0, 60, 0.3); }
+        body { margin: 0; background: var(--bg-dark); color: white; font-family: 'Noto Sans KR', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* 상단 타이틀바 (이미지 스타일) */
+        header { height: 40px; background: #000; display: flex; align-items: center; justify-content: center; border-bottom: var(--border); }
+        .header-title { color: var(--accent-blue); font-family: 'Rajdhani'; font-size: 18px; letter-spacing: 2px; font-weight: bold; }
+
+        /* 메인 레이아웃 (3단 분리) */
+        .main-container { display: flex; flex: 1; height: calc(100vh - 40px - 50px); /* 헤더, 푸터 제외 */ }
+
+        /* [1] 좌측 패널: 위치 맵 */
+        .panel-left { width: 250px; background: #111; border-right: var(--border); padding: 20px; display: flex; flex-direction: column; }
+        .label-badge { border: 1px solid #444; color: #666; font-size: 11px; padding: 4px 8px; border-radius: 4px; align-self: flex-start; margin-bottom: 20px; font-weight: bold; }
+        
+        .car-map { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        /* 자동차 실루엣 (단순화) */
+        .car-shape { width: 80px; height: 140px; border: 2px solid #333; border-radius: 10px; position: relative; }
+        .wheel { width: 10px; height: 20px; background: #333; position: absolute; }
+        .w-fl { top: 20px; left: -12px; } .w-fr { top: 20px; right: -12px; }
+        .w-rl { bottom: 20px; left: -12px; } .w-rr { bottom: 20px; right: -12px; }
+        /* 엔진룸 활성 표시 (빨간점) */
+        .active-point { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 60px; height: 40px; background: rgba(255, 51, 51, 0.3); border: 1px solid var(--accent-red); box-shadow: 0 0 10px var(--accent-red); animation: blink 2s infinite; }
+        
+        .location-text { margin-top: 20px; text-align: center; font-size: 12px; color: #666; }
+        .location-text strong { color: var(--accent-red); display: block; font-size: 14px; margin-bottom: 5px; }
+
+        /* [2] 중앙 패널: 조립 뷰 */
+        .panel-center { flex: 1; background: #000; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .center-label { position: absolute; top: 20px; left: 20px; }
+        
+        /* 엔진 코어 타겟 */
+        .engine-core { 
+            width: 300px; height: 300px; 
+            border: 2px dashed #333; border-radius: 50%; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+        .core-icon { font-size: 40px; color: #333; margin-bottom: 10px; }
+        .core-text { font-size: 12px; color: #555; }
 
         /* 부품 스타일 */
-        .part { position: absolute; width: 100px; cursor: grab; z-index: 20; text-align: center; }
-        .part svg { width: 80px; filter: drop-shadow(0 0 10px var(--neon)); transition: 0.3s; }
-        .part:active svg { transform: scale(1.1); filter: drop-shadow(0 0 20px var(--neon)); }
+        .part { position: absolute; width: 80px; cursor: grab; z-index: 100; display: flex; flex-direction: column; align-items: center; }
+        .part-box { width: 60px; height: 60px; background: #222; border: 1px solid #444; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .part:hover .part-box { border-color: white; transform: scale(1.1); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .part svg { width: 35px; fill: #aaa; }
+        .part-name { font-size: 11px; margin-top: 5px; background: #111; color: #aaa; padding: 2px 6px; border-radius: 3px; border: 1px solid #333; }
 
-        /* 말풍선 레이블 */
-        .label { position: absolute; top: -40px; left: 50%; transform: translateX(-50%); 
-            background: var(--neon); color: black; padding: 5px 12px; border-radius: 5px; 
-            font-size: 11px; font-weight: bold; opacity: 0; transition: 0.3s; white-space: nowrap; }
-        .part:hover .label { opacity: 1; top: -50px; }
+        /* 말풍선 (Hover Tooltip) */
+        .tooltip { 
+            position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
+            background: var(--accent-blue); color: #000; padding: 6px 10px; border-radius: 4px;
+            font-size: 11px; font-weight: bold; width: 120px; text-align: center;
+            opacity: 0; pointer-events: none; transition: 0.2s; white-space: normal;
+            box-shadow: 0 2px 10px rgba(0,204,255,0.3); z-index: 200;
+        }
+        .tooltip::after { content:''; position:absolute; bottom:-4px; left:50%; margin-left:-4px; border-width:4px; border-style:solid; border-color:var(--accent-blue) transparent transparent transparent; }
+        .part:hover .tooltip { opacity: 1; top: -60px; }
 
-        /* 다음 단계 버튼 */
-        .next-btn { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); 
-            padding: 18px 50px; border-radius: 50px; background: #111; color: #444; 
-            text-decoration: none; font-weight: bold; border: 1px solid #333; transition: 0.5s; pointer-events: none; }
-        .next-btn.active { background: var(--red); color: white; border-color: var(--red); 
-            pointer-events: auto; box-shadow: 0 0 30px var(--red); }
+        /* [3] 우측 패널: 컨트롤 */
+        .panel-right { width: 320px; background: #141414; border-left: var(--border); padding: 20px; display: flex; flex-direction: column; }
+        .step-count { text-align: right; color: #666; font-size: 12px; margin-bottom: 20px; }
+        
+        .control-box { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .slider-label { color: var(--accent-blue); font-size: 12px; font-weight: bold; margin-bottom: 10px; display: block; }
+        .progress-track { width: 100%; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+        .progress-fill { width: 0%; height: 100%; background: var(--accent-blue); transition: 0.5s; box-shadow: 0 0 10px var(--accent-blue); }
+        .status-text { color: #fff; font-size: 14px; margin-top: 10px; text-align: center; }
+
+        /* 부품 리스트 */
+        .part-list-item { 
+            display: flex; align-items: center; justify-content: space-between;
+            background: #1a1a1a; border: 1px solid #333; border-radius: 6px;
+            padding: 12px; margin-bottom: 8px; transition: 0.3s;
+        }
+        .part-list-item.done { border-color: #555; opacity: 0.5; }
+        .part-list-item.done .item-name { text-decoration: line-through; color: #555; }
+        .item-num { color: #666; font-size: 12px; margin-right: 10px; }
+        .item-name { color: #ccc; font-size: 13px; flex: 1; }
+        .item-icon { color: #444; font-size: 14px; }
+
+        /* 하단 네비게이션 */
+        footer { height: 50px; background: #000; border-top: var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+        .nav-btn { color: #888; text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 5px; transition: 0.3s; }
+        .nav-btn:hover { color: white; }
+        
+        /* 3D 버튼 (우측 하단) */
+        .btn-3d-link { 
+            background: #222; border: 1px solid #444; color: #666; 
+            padding: 8px 20px; border-radius: 4px; text-decoration: none; 
+            font-size: 13px; font-weight: bold; pointer-events: none; transition: 0.3s; 
+        }
+        .btn-3d-link.active { 
+            background: var(--accent-blue); color: black; border-color: var(--accent-blue); 
+            pointer-events: auto; box-shadow: 0 0 15px rgba(0,204,255,0.4); 
+        }
+
+        @keyframes blink { 50% { opacity: 0.5; } }
+        .docked { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
     </style>
 </head>
 <body>
-    <div class="workspace">
-        <header style="padding: 20px; text-align: center; border-bottom: 1px solid #1a1a1a; letter-spacing: 5px; color: var(--neon);">
-            V8 ENGINE ASSEMBLY PROTOCOL
-        </header>
 
-        <div class="engine-target" id="target">
-            <svg viewBox="0 0 100 100" width="150"><rect x="25" y="20" width="50" height="60" rx="5" fill="none" stroke="#333" stroke-width="2"/><text x="50" y="55" text-anchor="middle" fill="#222" font-size="8">WAITING FOR PARTS</text></svg>
+    <header>
+        <div class="header-title">DREAM-FI MECHANICS | 01</div>
+    </header>
+
+    <div class="main-container">
+        <div class="panel-left">
+            <div class="label-badge">LOCATION MAP</div>
+            <div class="car-map">
+                <div class="car-shape">
+                    <div class="active-point"></div>
+                    <div class="wheel w-fl"></div><div class="wheel w-fr"></div>
+                    <div class="wheel w-rl"></div><div class="wheel w-rr"></div>
+                </div>
+            </div>
+            <div class="location-text">
+                현재 <strong>엔진 룸 (Engine Bay)</strong><br>작업 중입니다.
+            </div>
         </div>
 
-        <div class="part" id="p1" style="top:25%; left:20%;">
-            <div class="label">TRANSMISSION (변속기)</div>
-            <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" stroke-width="2"/><path d="M50 20v60M20 50h60" stroke="currentColor"/></svg>
+        <div class="panel-center" id="workspace">
+            <div class="label-badge center-label">ASSEMBLY VIEW</div>
+            
+            <div class="engine-core" id="core">
+                <div class="core-icon">❖</div>
+                <div class="core-text">Drag Parts Here</div>
+            </div>
+
+            <div class="part" id="p1" style="top:20%; left:15%;">
+                <div class="tooltip">실린더 라이너<br>(내마모성 강화)</div>
+                <div class="part-box"><svg viewBox="0 0 24 24"><path d="M4 10h16v10H4z"/></svg></div>
+                <div class="part-name">1. 라이너</div>
+            </div>
+
+            <div class="part" id="p2" style="top:20%; right:15%;">
+                <div class="tooltip">오일 펌프<br>(윤활유 공급)</div>
+                <div class="part-box"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg></div>
+                <div class="part-name">2. 오일펌프</div>
+            </div>
+
+            <div class="part" id="p3" style="bottom:20%; left:15%;">
+                <div class="tooltip">완충기<br>(충격 흡수)</div>
+                <div class="part-box"><svg viewBox="0 0 24 24"><path d="M7 4v16h10V4H7z"/></svg></div>
+                <div class="part-name">3. 완충기</div>
+            </div>
+
+            <div class="part" id="p4" style="bottom:20%; right:15%;">
+                <div class="tooltip">브레이크 패드<br>(제동 장치)</div>
+                <div class="part-box"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg></div>
+                <div class="part-name">4. 브레이크</div>
+            </div>
         </div>
 
-        <div class="part" id="p2" style="bottom:25%; right:20%;">
-            <div class="label">EXHAUST SYSTEM (배기구)</div>
-            <svg viewBox="0 0 100 100"><path d="M20 60 Q50 20 80 60" fill="none" stroke="currentColor" stroke-width="5"/></svg>
+        <div class="panel-right">
+            <div class="step-count">Step 1/5</div>
+            
+            <div style="font-size:16px; font-weight:bold; color:white; margin-bottom:20px;">🔧 엔진 조립</div>
+
+            <div class="control-box">
+                <span class="slider-label">ASSEMBLY PROGRESS</span>
+                <div class="progress-track"><div class="progress-fill" id="progress-bar"></div></div>
+                <div class="status-text" id="status-text">부품 대기 중 (Ready)</div>
+            </div>
+
+            <div id="part-list">
+                <div class="part-list-item" id="list-p1"><span class="item-num">1.</span><span class="item-name">실린더 라이너</span><span class="item-icon">ℹ️</span></div>
+                <div class="part-list-item" id="list-p2"><span class="item-num">2.</span><span class="item-name">오일 펌프</span><span class="item-icon">ℹ️</span></div>
+                <div class="part-list-item" id="list-p3"><span class="item-num">3.</span><span class="item-name">쇼크업소버 (완충기)</span><span class="item-icon">ℹ️</span></div>
+                <div class="part-list-item" id="list-p4"><span class="item-num">4.</span><span class="item-name">브레이크 패드</span><span class="item-icon">ℹ️</span></div>
+            </div>
         </div>
     </div>
 
-    <a href="../1-2-detail/index.html" class="next-btn" id="nextBtn">ANALYZE 3D CORE (다음 단계)</a>
+    <footer>
+        <a href="#" class="nav-btn">◀ 이전 단계</a>
+        <a href="../1-2-detail/index.html" class="btn-3d-link" id="nextBtn">3D ENGINE VIEW ▶</a>
+    </footer>
 
     <script>
-        let docked = 0;
-        const target = document.getElementById('target').getBoundingClientRect();
-        const nextBtn = document.getElementById('nextBtn');
+        let dockedCount = 0;
+        const totalParts = 4;
+        const workspace = document.getElementById('workspace');
+        
+        document.querySelectorAll('.part').forEach(part => {
+            let isDragging = false;
+            
+            part.addEventListener('mousedown', () => { isDragging = true; part.style.zIndex = 1000; });
+            
+            document.addEventListener('mousemove', (e) => {
+                if(!isDragging) return;
+                const rect = workspace.getBoundingClientRect();
+                part.style.left = (e.clientX - rect.left - 40) + 'px';
+                part.style.top = (e.clientY - rect.top - 40) + 'px';
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if(!isDragging) return;
+                isDragging = false;
+                
+                const partRect = part.getBoundingClientRect();
+                const coreRect = document.getElementById('core').getBoundingClientRect();
+                const dist = Math.hypot(partRect.left - coreRect.left + 40 - 150, partRect.top - coreRect.top + 40 - 150);
 
-        document.querySelectorAll('.part').forEach(p => {
-            let dragging = false;
-            p.onmousedown = () => { dragging = true; p.style.zIndex = 100; };
-            document.onmousemove = e => {
-                if(dragging) {
-                    p.style.left = e.clientX - 50 + 'px';
-                    p.style.top = e.clientY - 50 + 'px';
-                }
-            };
-            document.onmouseup = () => {
-                if(!dragging) return;
-                dragging = false;
-                const rect = p.getBoundingClientRect();
-                const dist = Math.hypot(rect.left - target.left + 50, rect.top - target.top + 50);
+                if(dist < 100) { // 도킹 성공
+                    part.style.left = '50%'; part.style.top = '50%';
+                    part.style.transform = 'translate(-50%, -50%) scale(0.5)';
+                    part.classList.add('docked');
+                    
+                    if(!part.dataset.docked) {
+                        part.dataset.docked = "true";
+                        dockedCount++;
+                        
+                        // 우측 리스트 업데이트
+                        document.getElementById('list-'+part.id).classList.add('done');
+                        
+                        // 슬라이더 업데이트
+                        const percent = (dockedCount / totalParts) * 100;
+                        document.getElementById('progress-bar').style.width = percent + '%';
+                        document.getElementById('status-text').innerText = `조립 진행 중 (${Math.round(percent)}%)`;
 
-                if(dist < 150) { // 도킹 성공
-                    p.style.left = '50%'; p.style.top = '50%';
-                    p.style.transform = 'translate(-50%, -50%)';
-                    p.style.pointerEvents = 'none';
-                    p.style.opacity = '0.5';
-                    docked++;
-                    if(docked >= 2) {
-                        document.getElementById('target').classList.add('active');
-                        nextBtn.classList.add('active');
+                        // 완료 시
+                        if(dockedCount === totalParts) {
+                            document.getElementById('status-text').innerText = "조립 완료 (Complete)";
+                            document.getElementById('status-text').style.color = "var(--accent-blue)";
+                            document.getElementById('nextBtn').classList.add('active'); // 3D 버튼 활성화
+                        }
                     }
                 }
-            };
+            });
         });
     </script>
 </body>
